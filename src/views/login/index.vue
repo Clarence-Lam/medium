@@ -1,85 +1,78 @@
 <template>
-  <div class="login-container">
-    <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" autocomplete="on" label-position="left">
-
-      <div class="title-container">
-        <h3 class="title">Login Form</h3>
-      </div>
-
-      <el-form-item prop="username">
-        <span class="svg-container">
-          <svg-icon icon-class="user" />
-        </span>
-        <el-input
-          ref="username"
-          v-model="loginForm.username"
-          placeholder="Username"
-          name="username"
-          type="text"
-          tabindex="1"
-          autocomplete="on"
-        />
-      </el-form-item>
-
-      <el-tooltip v-model="capsTooltip" content="Caps lock is On" placement="right" manual>
-        <el-form-item prop="password">
-          <span class="svg-container">
-            <svg-icon icon-class="password" />
-          </span>
-          <el-input
-            :key="passwordType"
-            ref="password"
-            v-model="loginForm.password"
-            :type="passwordType"
-            placeholder="Password"
-            name="password"
-            tabindex="2"
-            autocomplete="on"
-            @keyup.native="checkCapslock"
-            @blur="capsTooltip = false"
-            @keyup.enter.native="handleLogin"
-          />
-          <span class="show-pwd" @click="showPwd">
-            <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
-          </span>
-        </el-form-item>
-      </el-tooltip>
-
-      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">Login</el-button>
-
-      <div style="position:relative">
-        <div class="tips">
-          <span>Username : admin</span>
-          <span>Password : any</span>
+  <div class="login_bg">
+    <div class="unit">
+      <div class="fl_div">
+        <img src="/static/index/images/login/login.png">
+        <div class="line" />
+        <div class="call_tel">
+          <div class="text">注册咨询热线</div>
+          <div class="tel">0754-8888-8888</div>
         </div>
-        <div class="tips">
-          <span style="margin-right:18px;">Username : editor</span>
-          <span>Password : any</span>
-        </div>
-
-        <el-button class="thirdparty-button" type="primary" @click="showDialog=true">
-          Or connect with
-        </el-button>
+        <ul>
+          <li><a href="/index.php/index/index/index.html">返回首页</a></li>
+          <li><a href="/index.php/index/index/about.html?type=1">关于我们</a></li>
+          <li><a href="/index.php/index/index/about.html?type=3">联系我们</a></li>
+        </ul>
       </div>
-    </el-form>
+      <div class="login-container ">
+        <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form loginForm" auto-complete="on" label-position="left">
 
-    <el-dialog title="Or connect with" :visible.sync="showDialog">
-      Can not be simulated on local, so please combine you own business simulation! ! !
-      <br>
-      <br>
-      <br>
-      <social-sign />
-    </el-dialog>
+          <!-- <div class="title-container">
+          <h3 class="title">Login Form</h3>
+        </div> -->
+          <br><br><br>
+          <el-form-item prop="username">
+            <span class="svg-container">
+              <svg-icon icon-class="user" />
+            </span>
+            <el-input
+              ref="username"
+              v-model="loginForm.username"
+              placeholder="Username"
+              name="username"
+              type="text"
+              tabindex="1"
+              auto-complete="on"
+            />
+          </el-form-item>
+
+          <el-form-item prop="password">
+            <span class="svg-container">
+              <svg-icon icon-class="password" />
+            </span>
+            <el-input
+              :key="passwordType"
+              ref="password"
+              v-model="loginForm.password"
+              :type="passwordType"
+              placeholder="Password"
+              name="password"
+              tabindex="2"
+              auto-complete="on"
+              @keyup.enter.native="handleLogin"
+            />
+            <span class="show-pwd" @click="showPwd">
+              <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
+            </span>
+          </el-form-item>
+
+          <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">登录</el-button>
+
+        <!-- <div class="tips">
+          <span style="margin-right:20px;">username: admin</span>
+          <span> password: any</span>
+        </div> -->
+
+        </el-form>
+      </div>
+    </div>
   </div>
 </template>
-
 <script>
 import { validUsername } from '@/utils/validate'
-import SocialSign from './components/SocialSignin'
 
 export default {
   name: 'Login',
-  components: { SocialSign },
   data() {
     const validateUsername = (rule, value, callback) => {
       if (!validUsername(value)) {
@@ -104,52 +97,20 @@ export default {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
         password: [{ required: true, trigger: 'blur', validator: validatePassword }]
       },
-      passwordType: 'password',
-      capsTooltip: false,
       loading: false,
-      showDialog: false,
-      redirect: undefined,
-      otherQuery: {}
+      passwordType: 'password',
+      redirect: undefined
     }
   },
   watch: {
     $route: {
       handler: function(route) {
-        const query = route.query
-        if (query) {
-          this.redirect = query.redirect
-          this.otherQuery = this.getOtherQuery(query)
-        }
+        this.redirect = route.query && route.query.redirect
       },
       immediate: true
     }
   },
-  created() {
-    // window.addEventListener('storage', this.afterQRScan)
-  },
-  mounted() {
-    if (this.loginForm.username === '') {
-      this.$refs.username.focus()
-    } else if (this.loginForm.password === '') {
-      this.$refs.password.focus()
-    }
-  },
-  destroyed() {
-    // window.removeEventListener('storage', this.afterQRScan)
-  },
   methods: {
-    checkCapslock({ shiftKey, key } = {}) {
-      if (key && key.length === 1) {
-        if (shiftKey && (key >= 'a' && key <= 'z') || !shiftKey && (key >= 'A' && key <= 'Z')) {
-          this.capsTooltip = true
-        } else {
-          this.capsTooltip = false
-        }
-      }
-      if (key === 'CapsLock' && this.capsTooltip === true) {
-        this.capsTooltip = false
-      }
-    },
     showPwd() {
       if (this.passwordType === 'password') {
         this.passwordType = ''
@@ -164,49 +125,361 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('user/login', this.loginForm)
-            .then(() => {
-              this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
-              this.loading = false
-            })
-            .catch(() => {
-              this.loading = false
-            })
+          this.$store.dispatch('user/login', this.loginForm).then(() => {
+            this.$router.push({ path: this.redirect || '/' })
+            this.loading = false
+          }).catch(() => {
+            this.loading = false
+          })
         } else {
           console.log('error submit!!')
           return false
         }
       })
-    },
-    getOtherQuery(query) {
-      return Object.keys(query).reduce((acc, cur) => {
-        if (cur !== 'redirect') {
-          acc[cur] = query[cur]
-        }
-        return acc
-      }, {})
     }
-    // afterQRScan() {
-    //   if (e.key === 'x-admin-oauth-code') {
-    //     const code = getQueryObject(e.newValue)
-    //     const codeMap = {
-    //       wechat: 'code',
-    //       tencent: 'code'
-    //     }
-    //     const type = codeMap[this.auth_type]
-    //     const codeName = code[type]
-    //     if (codeName) {
-    //       this.$store.dispatch('LoginByThirdparty', codeName).then(() => {
-    //         this.$router.push({ path: this.redirect || '/' })
-    //       })
-    //     } else {
-    //       alert('第三方登录失败')
-    //     }
-    //   }
-    // }
   }
 }
 </script>
+<style lang="scss" scoped>
+body {
+  background: #fff;
+  color: #555;
+  font-size: 14px;
+  font-family: "Microsoft YaHei", "Arial", "黑体", "宋体", sans-serif;
+}
+td,
+th {
+  font-size: 14px;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: normal;
+  font-size: 100%;
+}
+a {
+  color: #555;
+  text-decoration: none;
+}
+img {
+  border: none;
+  vertical-align: middle;
+}
+ul,
+li {
+  list-style: none;
+}
+input,
+textarea,
+select,
+button {
+  font: 14px "Microsoft YaHei", "Arial", "黑体", "宋体", sans-serif;
+}
+.clearfix:before,
+.clearfix:after {
+  content: "";
+  display: table;
+  clear: both;
+  visibility: hidden;
+}
+.clearfix {
+  *zoom: 1;
+}
+.lf {
+  float: left;
+}
+.rt {
+  float: right;
+}
+.w1200 {
+  width: 1200px;
+  margin: 0 auto;
+}
+
+.login_bg {
+  width: 100%;
+  height: 100%;
+  background: #524e4f url('../../assets/images/login_bg.jpg');
+  background-size: cover;
+}
+.main {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1; /* background-color:black;*/
+}
+.unit {
+  width: 794px;
+  height: 470px;
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  margin-left: -397px;
+  margin-top: -235px; /*background-color: red;transform: translate(-50%, -50%);-webkit-transform: translate(-50%, -50%);-moz-transform: translate(-50%, -50%);-ms-transform: translate(-50%, -50%);-o-transform: translate(-50%, -50%);transform: translate(-50%, -50%);*/
+}
+.loginForm h4.title {
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 12px;
+  position: relative;
+  color: #df5151;
+  font-size: 18px;
+}
+.loginForm h4.title:before {
+  content: "";
+  width: 30px;
+  height: 2px;
+  background-color: #df5151;
+  border-radius: 1px;
+  position: absolute;
+  left: 50%;
+  margin-left: -15px;
+  bottom: 0px;
+}
+.fl_div {
+  margin-top: 53px;
+  width: 471px;
+  height: 364px;
+  background: url(../../assets/images/fl_div_bg.png);
+  background-size: cover;
+  padding-top: 30px;
+  padding-left: 28px;
+  color: #fff;
+}
+.fl_div .line {
+  margin-top: 22px;
+  margin-bottom: 20px;
+  width: 40px;
+  height: 2px;
+  background-color: #ffffff;
+}
+.fl_div .text {
+  font-size: 16px;
+}
+.fl_div .tel {
+  font-size: 24px;
+  margin-top: 13px;
+  margin-bottom: 107px;
+}
+.fl_div ul li {
+  display: inline-block;
+}
+.fl_div ul li a {
+  display: block;
+  height: 26px;
+  line-height: 26px;
+  padding-left: 31px;
+  padding-right: 31px;
+  font-size: 14px;
+  color: #fff;
+  position: relative;
+}
+.fl_div ul li a:after {
+  content: "";
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  width: 1px;
+  height: 100%;
+  background-color: #ffffff;
+  opacity: 0.8;
+}
+.fl_div ul li:first-child a {
+  padding-left: 0;
+}
+.fl_div ul li:last-child a:after {
+  background-color: transparent;
+}
+.loginForm {
+  width: 410px;
+  height: 100%;
+  background-color: #ffffff;
+  box-shadow: -13px 13px 19px 1px rgba(0, 0, 0, 0.4);
+  border-radius: 5px;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  margin-top: -236px;
+  padding: 40px 35px;
+}
+.inputBox {
+  position: relative;
+}
+.inputBox input {
+  padding-left: 14px;
+  padding-right: 14px;
+  width: 100%;
+  height: 48px;
+  line-height: 48px;
+  border-radius: 3px;
+  border: solid 1px #cbcbcb;
+  margin-bottom: 15px;
+}
+.yanzCode input {
+  width: 170px;
+}
+.yanzCode a {
+  display: flex;
+  width: 157px;
+  height: 48px;
+  border-radius: 3px;
+  border: solid 1px #cbcbcb;
+  position: absolute;
+  right: 0;
+  top: 0;
+  justify-content: center;
+  align-items: center;
+  background-color: #f3fbfe;
+}
+.verifCode input {
+  padding-right: 105px;
+}
+.verifCode a {
+  width: 105px;
+  height: 48px;
+  line-height: 48px;
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+.privacy {
+  display: flex;
+  justify-content: flex-start;
+  padding-left: 20px;
+  position: relative;
+  color: #999;
+  font-size: 12px;
+  margin-bottom: 15px;
+}
+.privacy input[type="checkbox"] {
+  display: none;
+}
+.privacy label {
+  cursor: pointer;
+}
+.privacy label:before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background: url(/static/index/images/login/checked_no.png);
+  background-size: cover;
+  position: absolute;
+  left: 0;
+  top: 2px;
+}
+.privacy input[type="checkbox"]:checked + label:before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  background: url(/static/index/images/login/checked.png);
+  background-size: cover;
+  position: absolute;
+  left: 0;
+  top: 2px;
+}
+.privacy a {
+  color: #666;
+}
+.errorTip {
+  padding-bottom: 12px;
+}
+.tips {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font-size: 12px;
+  color: #e45547;
+}
+.tips img {
+  margin-right: 10px;
+}
+a.submit {
+  display: block;
+  width: 100%;
+  height: 46px;
+  line-height: 46px;
+  text-align: center;
+  background-color: #c7483b;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+.bottom {
+  display: flex;
+}
+.bottom .fll {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;
+  font-size: 14px;
+}
+.bottom .fll:nth-of-type(2) {
+  justify-content: flex-end;
+}
+.bottom .fll:nth-of-type(1) a {
+  color: #ca3939;
+}
+.bottom .fll span {
+  color: #999;
+}
+.bottom .fll:nth-of-type(2) a {
+  color: #666666;
+}
+.loginForm .titleUnit {
+  width: 100%;
+  height: 30px;
+  margin-bottom: 40px;
+}
+.titleUnit .unite {
+  width: 50%;
+  height: 30px;
+  position: relative;
+  float: left;
+  cursor: pointer;
+}
+.titleUnit .unite:nth-of-type(1):after {
+  content: "";
+  width: 1px;
+  height: 20px;
+  background-color: #cbcbcb;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+
+.titleUnit .unite h3.title {
+  text-align: center;
+  color: #999;
+  font-size: 18px;
+}
+.titleUnit .unite.current h3.title {
+  color: #df5151;
+}
+.titleUnit .unite.current:before {
+  content: "";
+  width: 30px;
+  height: 2px;
+  background-color: #df5151;
+  border-radius: 1px;
+  position: absolute;
+  left: 50%;
+  margin-left: -15px;
+  bottom: 0px;
+}
+</style>
 
 <style lang="scss">
 /* 修复input 背景不协调 和光标变色 */
@@ -235,7 +508,7 @@ $cursor: #fff;
       -webkit-appearance: none;
       border-radius: 0px;
       padding: 12px 5px 12px 15px;
-      color: $light_gray;
+      color: $bg;
       height: 47px;
       caret-color: $cursor;
 
@@ -247,8 +520,8 @@ $cursor: #fff;
   }
 
   .el-form-item {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid #454545;
+    // background: rgba(0, 0, 0, 0.1);
     border-radius: 5px;
     color: #454545;
   }
@@ -261,19 +534,19 @@ $dark_gray:#889aa4;
 $light_gray:#eee;
 
 .login-container {
-  min-height: 100%;
-  width: 100%;
-  background-color: $bg;
-  overflow: hidden;
+  // min-height: 100%;
+  // width: 100%;
+  // background-color: $bg;
+  // overflow: hidden;
 
-  .login-form {
-    position: relative;
-    width: 520px;
-    max-width: 100%;
-    padding: 160px 35px 0;
-    margin: 0 auto;
-    overflow: hidden;
-  }
+  // .login-form {
+  //   position: relative;
+  //   width: 520px;
+  //   max-width: 100%;
+  //   padding: 160px 35px 0;
+  //   margin: 0 auto;
+  //   overflow: hidden;
+  // }
 
   .tips {
     font-size: 14px;
@@ -316,17 +589,9 @@ $light_gray:#eee;
     cursor: pointer;
     user-select: none;
   }
-
-  .thirdparty-button {
-    position: absolute;
-    right: 0;
-    bottom: 6px;
-  }
-
-  @media only screen and (max-width: 470px) {
-    .thirdparty-button {
-      display: none;
-    }
+  .el-button--primary{
+    background-color: #a71918;
+    border-color: #ad201e;
   }
 }
 </style>
