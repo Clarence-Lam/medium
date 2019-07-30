@@ -33,7 +33,7 @@ export default {
   data() {
     return {
       form: {
-        name: 'Clarence',
+        name: '越光科技',
         phone: '135****0707',
         level: '',
         money: ''

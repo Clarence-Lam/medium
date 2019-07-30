@@ -20,6 +20,15 @@ export function validUsername(str) {
 }
 
 /**
+ * @param {string} str
+ * @returns {Boolean}
+ */
+export function validPhone(str) {
+  const reg = /^1[3456789]\d{9}$/
+  return reg.test(str)
+}
+
+/**
  * @param {string} url
  * @returns {Boolean}
  */

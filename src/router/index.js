@@ -105,7 +105,7 @@ export const constantRoutes = [
         path: 'pay',
         name: '我要充值',
         component: () => import('@/views/user/pay/index'),
-        meta: { title: '我要充值', icon: 'table' }
+        meta: { title: '我要充值', icon: 'table', breadcrumb: false }
       },
       {
         path: 'finance',
@@ -157,6 +157,78 @@ export const constantRoutes = [
         name: '文案代写',
         component: () => import('@/views/article/write/index'),
         meta: { title: '文案代写', icon: 'tree' }
+      },
+      {
+        path: 'copy-write',
+        name: '已有文案直接发布',
+        hidden: true,
+        component: () => import('@/views/article/components/copy-write'),
+        meta: { title: '已有文案直接发布', icon: 'tree' }
+      }
+    ]
+  },
+  {
+    path: '/test',
+    component: Layout,
+    redirect: '/article/publish1',
+    name: '问答推广',
+    hidden: true,
+    showTop: true,
+    meta: { title: '问答推广', icon: 'example' },
+    children: [
+      {
+        path: 'publish1',
+        name: '全部问答平台',
+        component: () => import('@/views/home/index'),
+        meta: { title: '全部问答平台', icon: 'table' }
+      }
+    ]
+  },
+  {
+    path: '/test1',
+    component: Layout,
+    name: '平台推广',
+    meta: { title: '平台推广', icon: 'example' },
+    hidden: true,
+    showTop: true,
+    children: [
+      {
+        path: 'index',
+        name: '平台推广',
+        component: () => import('@/views/home/index'),
+        meta: { title: '平台推广', icon: 'form' }
+      }
+    ]
+  },
+  {
+    path: '/test2',
+    component: Layout,
+    name: '媒体推广',
+    meta: { title: '媒体推广', icon: 'example' },
+    hidden: true,
+    showTop: true,
+    children: [
+      {
+        path: 'index',
+        name: '媒体推广',
+        component: () => import('@/views/home/index'),
+        meta: { title: '媒体推广', icon: 'form' }
+      }
+    ]
+  },
+  {
+    path: '/test3',
+    component: Layout,
+    name: '返回用户主页',
+    meta: { title: '返回用户主页', icon: 'example' },
+    hidden: true,
+    showTop: true,
+    children: [
+      {
+        path: 'index',
+        name: '返回用户主页',
+        component: () => import('@/views/home/index'),
+        meta: { title: '返回用户主页', icon: 'form' }
       }
     ]
   }
@@ -218,6 +290,117 @@ export const asyncRoutes = [
         component: () => import('@/views/order/index'),
         meta: { title: '我的订单', icon: 'form' }
       }
+    ]
+  },
+  {
+    path: '/setting',
+    component: Layout,
+    redirect: '/user',
+    name: '设置',
+    meta: {
+      title: '设置',
+      icon: 'nested',
+      roles: ['admin', 'service', 'technology']
+    },
+    children: [
+      {
+        path: 'user',
+        component: () => import('@/views/setting/user/index'),
+        meta: {
+          title: '用户管理',
+          meta: { roles: ['admin'] }
+        }
+      },
+      {
+        // path: 'types',
+        // // component: () => import('@/views/setting/platform/types'), // Parent router-view
+        // name: '系统配置',
+        // meta: { title: '系统配置', meta: { roles: ['admin'] }},
+        // children: [
+        //   {
+        path: 'platform',
+        component: () => import('@/views/setting/platform/index'),
+        name: '平台配置管理',
+        meta: { title: '平台配置管理', roles: ['admin'] },
+        redirect: '/setting/platform/types',
+        children: [
+          {
+            path: 'types',
+            component: () => import('@/views/setting/platform/types'),
+            name: '类目管理',
+            meta: { title: '类目管理', meta: { roles: ['admin'] }}
+          },
+          {
+            path: 'cases',
+            component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
+            name: '案例管理',
+            meta: { title: '案例管理', roles: ['admin'] }
+          },
+          {
+            path: 'nothing',
+            component: () => import('@/views/setting/platform/nothing'),
+            name: '无文章价格管理',
+            meta: { title: '无文章价格管理', roles: ['admin'] }
+          }
+        ]
+      },
+      {
+        path: 'medium',
+        component: () => import('@/views/setting/medium/index'),
+        name: '媒体配置管理',
+        meta: { title: '媒体配置管理', roles: ['admin'] },
+        redirect: '/setting/medium/types',
+        children: [
+          {
+            path: 'types',
+            component: () => import('@/views/setting/medium/types'),
+            name: '类目管理',
+            meta: { title: '类目管理', roles: ['admin'] }
+          },
+          {
+            path: 'cases',
+            component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
+            name: '案例管理',
+            meta: { title: '案例管理', roles: ['admin'] }
+          },
+          {
+            path: 'nothing',
+            component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
+            name: '无文章价格管理',
+            meta: { title: '无文章价格管理', roles: ['admin'] }
+          }
+        ]
+      },
+      {
+        path: 'question',
+        component: () => import('@/views/setting/question/index'),
+        name: '问答配置管理',
+        meta: { title: '问答配置管理', roles: ['admin'] },
+        redirect: '/setting/question/types',
+        children: [
+          {
+            path: 'types',
+            component: () => import('@/views/setting/question/types'),
+            name: '类目管理',
+            meta: { title: '类目管理', roles: ['admin'] }
+          },
+          {
+            path: 'cases',
+            component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
+            name: '案例管理',
+            meta: { title: '案例管理', roles: ['admin'] }
+          },
+          {
+            path: 'nothing',
+            component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
+            name: '无文章价格管理',
+            meta: { title: '无文章价格管理', roles: ['admin'] }
+          }
+          // ]
+        //   }
+        ]
+      }
+
     ]
   },
   // {

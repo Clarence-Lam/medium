@@ -21,15 +21,15 @@
           <h3 class="title">Login Form</h3>
         </div> -->
           <br><br><br>
-          <el-form-item prop="username">
+          <el-form-item prop="phone">
             <span class="svg-container">
               <svg-icon icon-class="user" />
             </span>
             <el-input
-              ref="username"
-              v-model="loginForm.username"
-              placeholder="Username"
-              name="username"
+              ref="phone"
+              v-model="loginForm.phone"
+              placeholder="手机号码"
+              name="phone"
               type="text"
               tabindex="1"
               auto-complete="on"
@@ -69,32 +69,32 @@
   </div>
 </template>
 <script>
-import { validUsername } from '@/utils/validate'
-
+import { validPhone } from '@/utils/validate'
+// import axios from 'axios'
 export default {
   name: 'Login',
   data() {
-    const validateUsername = (rule, value, callback) => {
-      if (!validUsername(value)) {
-        callback(new Error('Please enter the correct user name'))
+    const validatePhone = (rule, value, callback) => {
+      if (!validPhone(value)) {
+        callback(new Error('请确认手机号码是否正确'))
       } else {
         callback()
       }
     }
     const validatePassword = (rule, value, callback) => {
       if (value.length < 6) {
-        callback(new Error('The password can not be less than 6 digits'))
+        callback(new Error('至少输入6位数密码'))
       } else {
         callback()
       }
     }
     return {
       loginForm: {
-        username: 'admin',
-        password: '111111'
+        phone: '13510520707',
+        password: '123456'
       },
       loginRules: {
-        username: [{ required: true, trigger: 'blur', validator: validateUsername }],
+        phone: [{ required: true, trigger: 'blur', validator: validatePhone }],
         password: [{ required: true, trigger: 'blur', validator: validatePassword }]
       },
       loading: false,
@@ -125,12 +125,26 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('user/login', this.loginForm).then(() => {
+          this.$store.dispatch('user/login', this.loginForm).then((res) => {
             this.$router.push({ path: this.redirect || '/' })
             this.loading = false
-          }).catch(() => {
+          }).catch((msg) => {
+            this.$message.error(msg)
             this.loading = false
           })
+        //   axios
+        //     .post('/api/register', {
+        //       phone: this.loginForm.phone,
+        //       password: this.loginForm.password,
+        //       name: 'Clarence',
+        //       role: 'admin'
+        //     })
+        //     .then((response) => {
+        //       console.log(response)
+        //     })
+        //     .catch((error) => {
+        //       console.log(error)
+        //     })
         } else {
           console.log('error submit!!')
           return false

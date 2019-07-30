@@ -1,6 +1,6 @@
 <template>
   <div class="dashboard-container">
-    <div class="dashboard-text">这里将显示文章发布</div>
+    <div class="dashboard-text">这里将显示文案代写</div>
   </div>
 </template>
 

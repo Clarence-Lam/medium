@@ -40,7 +40,7 @@ export default {
     },
     layout: {
       type: String,
-      default: 'total, sizes, prev, pager, next, jumper'
+      default: 'total, prev, pager, next, jumper'
     },
     background: {
       type: Boolean,
@@ -94,6 +94,7 @@ export default {
 .pagination-container {
   background: #fff;
   padding: 32px 16px;
+  float: right
 }
 .pagination-container.hidden {
   display: none;

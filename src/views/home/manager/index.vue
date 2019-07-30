@@ -33,12 +33,12 @@ export default {
   data() {
     return {
       form: {
-        name: 'Clarence',
+        name: '越光科技',
         phone: '135****0707',
         QQ: '475***284',
         wechat: '135****0707'
       },
-      url: 'https://s2.ax1x.com/2019/07/10/ZgaRcd.jpg'
+      url: 'https://s2.ax1x.com/2019/07/10/Zgy8W6.jpg'
     }
   },
   methods: {

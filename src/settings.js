@@ -1,5 +1,5 @@
 module.exports = {
-  title: '媒介盒子',
+  title: '越光科技',
 
   /**
    * @type {boolean} true | false
