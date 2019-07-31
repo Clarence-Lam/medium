@@ -84,6 +84,16 @@ export function delNothing(id) {
     method: 'delete'
   })
 }
+
+// 获取案例的select
+export function getSelects(query) {
+  return request({
+    url: '/setting/getSelects',
+    method: 'get',
+    params: query
+  })
+}
+
 export function test(query) {
   return request({
     url: '/test',

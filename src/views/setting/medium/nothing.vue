@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <h3 style="padding-left: 20px;">平台推广配置</h3>
+    <h3 style="padding-left: 20px;">媒体推广配置</h3>
     <div class="nothing-box">
       <p class="nothing-inline">字数/金额：</p>
       <div class="nothing-inline">
@@ -55,7 +55,7 @@
 <script>
 import { getNothing, addNothing, delNothing } from '@/api/setting'
 export default {
-  name: 'PlatformNothing',
+  name: 'MediumNothing',
   data() {
     return {
       num: [],
@@ -72,7 +72,7 @@ export default {
   },
   methods: {
     getNothing() {
-      getNothing({ dept: 'platform' }).then(res => {
+      getNothing({ dept: 'medium' }).then(res => {
         this.num = res.num
         this.genre = res.genre
       })
@@ -90,7 +90,7 @@ export default {
       if (genreValue) {
         const params = {
           name: genreValue,
-          dept: 'platform',
+          dept: 'medium',
           sign: 'genre'
         }
         addNothing(params).then(res => {
@@ -127,7 +127,7 @@ export default {
         const params = {
           num: numValue,
           money: moneyValue,
-          dept: 'platform',
+          dept: 'medium',
           sign: 'num'
         }
         addNothing(params).then(res => {

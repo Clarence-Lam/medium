@@ -238,11 +238,59 @@ class SettingController {
     })
   }
 
+  async getSelects(ctx) {
+    const { dept } = ctx.query
+    return DBHelper.getList('types_field', [0, 1000], { dept }).then(result => {
+    //   const data = {}
+      //   for (const item of result) {
+      //     console.log(item)
+      //   }
+      const Setting = new SettingController()
+      const data = Setting.formateArrData(result, 'type_name')
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        data
+      }
+    })
+  }
+
   async test(ctx) {
     ctx.body = {
       status: 200,
       statusText: 'test'
     }
+  }
+
+  // 数据分组
+  formateArrData(initialArr, name) {
+    // 判定传参是否符合规则
+    if (!(initialArr instanceof Array)) {
+      return '请传入正确格式的数组'
+    }
+    if (!name) {
+      return '请传入对象属性'
+    }
+    // 先获取一下这个数组中有多少个"name"
+    const nameArr = []
+    for (const i in initialArr) {
+      if (nameArr.indexOf(initialArr[i][`${name}`]) === -1) {
+        nameArr.push(initialArr[i][`${name}`])
+      }
+    }
+    // 新建一个包含多个list的结果对象
+    const tempObj = {}
+    // 根据不同的"name"生成多个数组
+    for (const k in nameArr) {
+      for (const j in initialArr) {
+        if (initialArr[j][`${name}`] === nameArr[k]) {
+          // 每次外循环时新建一个对应"name"的数组, 内循环时当前数组不变
+          tempObj[nameArr[k]] = tempObj[nameArr[k]] || []
+          tempObj[nameArr[k]].push(initialArr[j])
+        }
+      }
+    }
+    return tempObj
   }
 }
 

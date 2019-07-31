@@ -19,5 +19,7 @@ router
   .post('/addNothing', settingController.addNothing)
   .del('/delNothing/del/:id', settingController.delNothing)
 
+  .get('/getSelects', settingController.getSelects)
+
 module.exports = router
 

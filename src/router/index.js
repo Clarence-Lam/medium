@@ -89,7 +89,7 @@ export const constantRoutes = [
     redirect: '/home',
     children: [{
       path: 'home',
-      name: '用户主页',
+      name: 'home',
       component: () => import('@/views/home/index'),
       meta: { title: '用户主页', icon: 'dashboard' }
     }]
@@ -98,42 +98,42 @@ export const constantRoutes = [
     path: '/user',
     component: Layout,
     redirect: '/user/pay',
-    name: '个人中心',
+    name: 'user',
     meta: { title: '个人中心', icon: 'example' },
     children: [
       {
         path: 'pay',
-        name: '我要充值',
+        name: 'pay',
         component: () => import('@/views/user/pay/index'),
         meta: { title: '我要充值', icon: 'table', breadcrumb: false }
       },
       {
         path: 'finance',
-        name: '财务报表',
+        name: 'finance',
         component: () => import('@/views/user/finance/index'),
         meta: { title: '财务报表', icon: 'tree' }
       },
       {
         path: 'news',
-        name: '系统消息',
+        name: 'news',
         component: () => import('@/views/user/news/index'),
         meta: { title: '系统消息', icon: 'tree' }
       },
       {
         path: 'withdraw',
-        name: '提现',
+        name: 'withdraw',
         component: () => import('@/views/user/withdraw/index'),
         meta: { title: '提现', icon: 'tree' }
       },
       {
         path: 'bill',
-        name: '发票申请',
+        name: 'bill',
         component: () => import('@/views/user/bill/index'),
         meta: { title: '发票申请', icon: 'tree' }
       },
       {
         path: 'user',
-        name: '资料修改',
+        name: 'user',
         component: () => import('@/views/user/user/index'),
         meta: { title: '资料修改', icon: 'tree' }
       }
@@ -143,24 +143,24 @@ export const constantRoutes = [
     path: '/article',
     component: Layout,
     redirect: '/article/publish',
-    name: '文章管理',
+    name: 'article',
     meta: { title: '文章管理', icon: 'example' },
     children: [
       {
         path: 'publish',
-        name: '文章发布',
+        name: 'publish',
         component: () => import('@/views/article/publish/index'),
         meta: { title: '文章发布', icon: 'table' }
       },
       {
         path: 'write',
-        name: '文案代写',
+        name: 'write',
         component: () => import('@/views/article/write/index'),
         meta: { title: '文案代写', icon: 'tree' }
       },
       {
         path: 'copy-write',
-        name: '已有文案直接发布',
+        name: 'copy-write',
         hidden: true,
         component: () => import('@/views/article/components/copy-write'),
         meta: { title: '已有文案直接发布', icon: 'tree' }
@@ -325,21 +325,28 @@ export const asyncRoutes = [
         redirect: '/setting/platform/types',
         children: [
           {
-            path: 'types',
+            path: 'platform-types',
             component: () => import('@/views/setting/platform/types'),
-            name: '类目管理',
+            name: 'platform-types',
             meta: { title: '类目管理', meta: { roles: ['admin'] }}
           },
           {
-            path: 'cases',
-            component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
-            name: '案例管理',
+            path: 'platform-cases',
+            component: () => import('@/views/setting/platform/cases'),
+            name: 'platform-cases',
             meta: { title: '案例管理', roles: ['admin'] }
           },
           {
-            path: 'nothing',
+            path: 'platform-caseForm',
+            component: () => import('@/views/setting/platform/caseForm'),
+            name: 'platform-caseForm',
+            meta: { title: '案例管理', roles: ['admin'] },
+            hidden: true
+          },
+          {
+            path: 'platform-nothing',
             component: () => import('@/views/setting/platform/nothing'),
-            name: '无文章价格管理',
+            name: 'platform-nothing',
             meta: { title: '无文章价格管理', roles: ['admin'] }
           }
         ]
@@ -352,21 +359,21 @@ export const asyncRoutes = [
         redirect: '/setting/medium/types',
         children: [
           {
-            path: 'types',
+            path: 'medium-types',
             component: () => import('@/views/setting/medium/types'),
-            name: '类目管理',
+            name: 'medium-types',
             meta: { title: '类目管理', roles: ['admin'] }
           },
           {
-            path: 'cases',
+            path: 'medium-cases',
             component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
-            name: '案例管理',
+            name: 'medium-cases',
             meta: { title: '案例管理', roles: ['admin'] }
           },
           {
-            path: 'nothing',
-            component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
-            name: '无文章价格管理',
+            path: 'medium-nothing',
+            component: () => import('@/views/setting/medium/nothing'),
+            name: 'medium-nothing',
             meta: { title: '无文章价格管理', roles: ['admin'] }
           }
         ]
@@ -379,21 +386,21 @@ export const asyncRoutes = [
         redirect: '/setting/question/types',
         children: [
           {
-            path: 'types',
+            path: 'question-types',
             component: () => import('@/views/setting/question/types'),
-            name: '类目管理',
+            name: 'question-types',
             meta: { title: '类目管理', roles: ['admin'] }
           },
           {
-            path: 'cases',
+            path: 'question-cases',
             component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
-            name: '案例管理',
+            name: 'question-cases',
             meta: { title: '案例管理', roles: ['admin'] }
           },
           {
-            path: 'nothing',
-            component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
-            name: '无文章价格管理',
+            path: 'question-nothing',
+            component: () => import('@/views/setting/question/nothing'),
+            name: 'question-nothing',
             meta: { title: '无文章价格管理', roles: ['admin'] }
           }
           // ]

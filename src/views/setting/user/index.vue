@@ -54,7 +54,7 @@
           <span>{{ scope.row.position }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="Actions" align="center" width="230" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" width="230" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
           <el-button type="primary" size="mini" @click="handleUpdate(row)">
             编辑
@@ -232,7 +232,6 @@ export default {
       this.userForm = Object.assign({}, row) // copy obj
       this.userForm.password = ''
       this.userForm.id = row.id
-      console.log(this.userForm)
       //   this.temp.timestamp = new Date(this.temp.timestamp)
       this.dialogStatus = 'update'
       this.dialogFormVisible = true
