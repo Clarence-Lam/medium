@@ -159,11 +159,17 @@ export const constantRoutes = [
         meta: { title: '文案代写', icon: 'tree' }
       },
       {
-        path: 'copy-write',
-        name: 'copy-write',
+        path: 'copy-write-platform',
+        name: 'copy-write-platform',
         hidden: true,
-        component: () => import('@/views/article/components/copy-write'),
+        component: () => import('@/views/article/platform/copy-write'),
         meta: { title: '已有文案直接发布', icon: 'tree' }
+      }, {
+        path: 'commit',
+        name: 'commit',
+        hidden: true,
+        component: () => import('@/views/article/components/commit'),
+        meta: { title: '订单确认', icon: 'tree' }
       }
     ]
   },
@@ -466,7 +472,7 @@ export const asyncRoutes = [
   // },
 
   /** when your routing map is too long, you can split it into small modules **/
-  // componentsRouter,
+  //   componentsRouter,
   // chartsRouter,
   // nestedRouter,
   // tableRouter,

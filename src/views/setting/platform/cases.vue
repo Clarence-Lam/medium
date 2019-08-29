@@ -3,10 +3,14 @@
     <CaseTable
       :table="'platform'"
       :table-lable="tableLable"
+      :table-data="tableData"
+      :loading="loading"
+      :total="total"
     />
   </div>
 </template>
 <script>
+import { getCasesList } from '@/api/setting'
 import CaseTable from '../components/CaseTable'
 export default {
   components: { CaseTable },
@@ -32,8 +36,15 @@ export default {
           title: '备注',
           key: 'mark'
         }
-      ]
+      ],
+      tableData: [],
+      loading: false,
+      total: 0,
+      page: 1
     }
+  },
+  created() {
+    this.getCasesList()
   },
   methods: {
     handleData(value) {
@@ -54,7 +65,28 @@ export default {
           }
         }
       )
+    },
+    getCasesList() {
+      this.loading = true
+      getCasesList({ dept: 'platform', page: this.page }).then(res => {
+        this.loading = false
+        this.tableData = res.data
+        this.total = res.num
+      })
+    },
+    handleUpdate(row) {
+      this.$router.push(
+        {
+          name: 'platform-caseForm',
+          params: {
+            dialogStatus: 'update',
+            id: row.id,
+            row
+          }
+        }
+      )
     }
+
   }
 }
 </script>

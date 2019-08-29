@@ -3,7 +3,7 @@
     <el-tag
       v-for="tag in dynamicTags"
       :key="tag.id"
-      closable
+      :closable="typeName!=='排序'"
       :disable-transitions="false"
       @close="handleClose(tag.id)"
     >
@@ -18,7 +18,8 @@
       @keyup.enter.native="handleInputConfirm"
       @blur="handleInputConfirm"
     />
-    <el-button v-else class="button-new-tag" size="small" @click="showInput">+ 新标签</el-button>
+    <el-button v-else-if="typeName!=='排序'" class="button-new-tag" size="small" @click="showInput">+ 新标签</el-button>
+    <!-- <el-button v-else class="button-new-tag" size="small" @click="showInput">+ 新标签</el-button> -->
   </div>
 </template>
 <script>

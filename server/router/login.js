@@ -9,6 +9,7 @@ router
   .post('/login', loginController.login)
 //   .post('/register', settingController.register)
   .get('/info', loginController.info)
+  .post('/logout', loginController.logout)
   .post('/test', loginController.test)
 
 module.exports = router

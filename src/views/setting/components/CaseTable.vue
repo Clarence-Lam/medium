@@ -7,8 +7,8 @@
     </div>
     <el-table
       :key="tableKey"
-      v-loading="listLoading"
-      :data="list"
+      v-loading="loading"
+      :data="tableData"
       border
       fit
       highlight-current-row
@@ -43,11 +43,13 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
+    <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList()" />
 
   </div>
 </template>
 <script>
+import { deleteCase } from '@/api/setting'
+
 import Pagination from '@/components/Pagination'
 export default {
   name: 'CaseTable',
@@ -64,13 +66,30 @@ export default {
       default() {
         return []
       }
+    },
+    tableData: {
+      type: Array,
+      default() {
+        return []
+      }
+    },
+    loading: {
+      type: Boolean,
+      default() {
+        return true
+      }
+    },
+    total: {
+      type: Number,
+      default() {
+        return 0
+      }
     }
   },
   data() {
     return {
       tableKey: 0,
       list: null,
-      total: 0,
       listLoading: false,
       listQuery: {
         page: 1,
@@ -80,28 +99,32 @@ export default {
     }
   },
   methods: {
-    getList() {},
-
+    getList() {
+      this.$parent.page = this.listQuery.page
+      this.$parent.getCasesList()
+    },
     handleModifyStatus(row, status) {
       this.$confirm('此操作将删除该用户, 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        // this.listLoading = true
-        // deleteUser(row.id).then(res => {
-        //   this.listLoading = false
-        //   this.$message({
-        //     message: res.msg,
-        //     type: 'success'
-        //   })
-        //   this.getList()
-        // })
-        alert()
+        this.$parent.loading = true
+        deleteCase(row.id).then(res => {
+          this.$parent.loading = false
+          this.$message({
+            message: res.msg,
+            type: 'success'
+          })
+          this.$parent.getCasesList()
+        })
       })
     },
     handleCreate() {
       this.$parent.handleCreate('caseForm')
+    },
+    handleUpdate(row) {
+      this.$parent.handleUpdate(row)
     }
   }
 }

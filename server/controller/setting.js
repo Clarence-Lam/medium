@@ -1,5 +1,6 @@
 const userModel = require('../model/user.js')
 const DBHelper = require('../helper/DBHelper.js')
+const SettingModel = require('../model/setting.js')
 const uuidv1 = require('uuid/v1')
 const moment = require('moment')
 const bcrypt = require('bcrypt')
@@ -255,10 +256,116 @@ class SettingController {
     })
   }
 
-  async test(ctx) {
-    ctx.body = {
+  async createCase(ctx) {
+    const Setting = new SettingController()
+    const { name, agent_price, general_price, baidu, platform, start_num, tags, url, dept, mark } = ctx.request.body
+    const caseID = uuidv1()
+    const params = {
+      id: caseID,
+      name, agent_price, general_price, baidu, platform, start_num, type_json: JSON.stringify(tags), url,
+      dept, mark,
+      created_by: ctx.session.userName,
+      created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+    }
+    await DBHelper.addRow('article_cases', params).then(async() => {
+    //   for (const item of tags) {
+      ctx.body = await Setting.createArticleType(caseID, tags, ctx, dept)
+      //   }
+    })
+  }
+
+  async updateCase(ctx) {
+    const { id, name, agent_price, general_price, baidu, platform, start_num, tags, url, dept, mark } = ctx.request.body
+
+    return SettingModel.delArticleType(id).then(async() => {
+      const params = {
+        name, agent_price, general_price, baidu, platform, start_num, type_json: JSON.stringify(tags), url,
+        dept, mark,
+        updated_by: ctx.session.userName,
+        updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
+      }
+      return await DBHelper.updateRow('article_cases', id, params).then(async() => {
+        const Setting = new SettingController()
+        ctx.body = await Setting.createArticleType(id, tags, ctx, dept)
+      })
+    })
+  }
+
+  async getCasesList(ctx) {
+    const { dept } = ctx.query
+    const pageNum = parseInt(ctx.query.page || 1, 10)// 页码
+    const end = 10 // 默认页数
+    const start = (pageNum - 1) * end
+    const limit = [start, end]
+    return Promise.all(
+      [
+        DBHelper.getList('article_cases', limit, { dept }),
+        DBHelper.getListTotal('article_cases', { dept })
+      ]).then(result => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        data: result[0],
+        num: result[1][0].count
+      }
+    })
+  }
+
+  async deleteCase(ctx) {
+    await DBHelper.delRow('article_cases', ctx.params.id).then(() => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        msg: '成功删除案例'
+      }
+    })
+  }
+
+  async getArticleType(ctx) {
+    const cases_id = ctx.query.cases_id
+    return SettingModel.getArticleType(cases_id).then(result => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        data: result
+      }
+    })
+  }
+
+  async createArticleType(caseID, tags, ctx, dept) {
+    for await (const item of tags) {
+      const params_type = {
+        id: uuidv1(),
+        cases_id: caseID,
+        types_id: item.type,
+        types_name: item.type_name,
+        type_field_id: item.id,
+        type_field_name: item.name,
+        created_by: ctx.session.userName,
+        created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+      }
+      DBHelper.addRow('article_type', params_type)
+    }
+    if (dept) {
+      await DBHelper.getList('types_field', [0, 1000], { type_name: '排序', dept }).then(async result => {
+        for await (const item of result) {
+          const params_type = {
+            id: uuidv1(),
+            cases_id: caseID,
+            types_id: item.type,
+            types_name: item.type_name,
+            type_field_id: item.id,
+            type_field_name: item.name,
+            created_by: ctx.session.userName,
+            created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+          }
+          DBHelper.addRow('article_type', params_type)
+        }
+      })
+    }
+    return {
       status: 200,
-      statusText: 'test'
+      statusText: 'ok'
     }
   }
 

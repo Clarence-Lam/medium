@@ -5,7 +5,7 @@ exports.getList = (table, limit, value) => {
   for (const item in value) {
     str += ` AND ${item} = '${value[item]}'`
   }
-  const sql = `SELECT*FROM ${table} WHERE STATUS='1' ${value ? str : ''} limit ${limit[0]}, ${limit[1]}`
+  const sql = `SELECT*FROM ${table} WHERE STATUS='1' ${value ? str : ''} ORDER BY created_time DESC limit ${limit[0]}, ${limit[1]}`
   return query(sql, value)
 }
 
@@ -14,7 +14,7 @@ exports.getListTotal = (table, value) => {
   for (const item in value) {
     str += ` AND ${item} = '${value[item]}'`
   }
-  const sql = `SELECT COUNT(*) AS count FROM ${table} WHERE STATUS='1' ${value ? str : ''}`
+  const sql = `SELECT COUNT(*) AS count FROM ${table} WHERE STATUS='1' ${value ? str : ''} ORDER BY created_time DESC`
   return query(sql, value)
 }
 
@@ -31,4 +31,35 @@ exports.updateRow = (table, id, value) => {
 exports.addRow = (table, value) => {
   const sql = `insert into ${table} set ?`
   return query(sql, value)
+}
+
+exports.addRowFormat = (table, value) => {
+  const sql = `insert into ${table} set ?`
+  return format(sql, value)
+}
+
+exports.getListFormat = (table, limit, value) => {
+  let str = ''
+  for (const item in value) {
+    str += ` AND ${item} = '${value[item]}'`
+  }
+  const sql = `SELECT*FROM ${table} WHERE STATUS='1' ${value ? str : ''} limit ${limit[0]}, ${limit[1]}`
+  return format(sql, value)
+}
+
+exports.getListInRow = (table, limit, value, inArr) => {
+  let str = ''
+  for (const item in value) {
+    str += ` AND ${item} = '${value[item]}'`
+  }
+  for (const arr in inArr) {
+    const strArr = []
+    for (const item of inArr[arr]) {
+      // str += ` AND ${arr} IN ('${value[item]}')`
+      strArr.push(`'${item}'`)
+    }
+    str += ` AND ${arr} IN (${strArr.join(',')})`
+  }
+  const sql = `SELECT*FROM ${table} WHERE STATUS='1' ${value || inArr ? str : ''} limit ${limit[0]}, ${limit[1]}`
+  return format(sql, value)
 }

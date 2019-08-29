@@ -20,6 +20,11 @@ router
   .del('/delNothing/del/:id', settingController.delNothing)
 
   .get('/getSelects', settingController.getSelects)
+  .get('/getCasesList', settingController.getCasesList)
+  .get('/getArticleType', settingController.getArticleType)
+  .post('/createCase', settingController.createCase)
+  .post('/updateCase', settingController.updateCase)
+  .del('/deleteCase/:id', settingController.deleteCase)
 
 module.exports = router
 

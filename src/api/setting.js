@@ -94,10 +94,41 @@ export function getSelects(query) {
   })
 }
 
-export function test(query) {
+export function createCase(data) {
   return request({
-    url: '/test',
+    url: '/setting/createCase',
     method: 'post',
+    data
+  })
+}
+
+export function updateCase(data) {
+  return request({
+    url: '/setting/updateCase',
+    method: 'post',
+    data
+  })
+}
+
+export function getCasesList(query) {
+  return request({
+    url: '/setting/getCasesList',
+    method: 'get',
+    params: query
+  })
+}
+
+export function deleteCase(id) {
+  return request({
+    url: `/setting/deleteCase/${id}`,
+    method: 'delete'
+  })
+}
+
+export function getArticleType(query) {
+  return request({
+    url: '/setting/getArticleType',
+    method: 'get',
     params: query
   })
 }
