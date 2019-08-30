@@ -301,8 +301,8 @@ export const asyncRoutes = [
   {
     path: '/setting',
     component: Layout,
-    redirect: '/user',
-    name: '设置',
+    redirect: '/home',
+    // name: '设置',
     meta: {
       title: '设置',
       icon: 'nested',

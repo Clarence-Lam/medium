@@ -7,28 +7,28 @@ const bcrypt = require('bcrypt')
 const _ = require('lodash')
 
 class OrderController {
-//   async addOrder(ctx) {
-//     console.log(111)
-//     const { name, time, mark, content } = ctx.request.body
-//     const params = {
-//       id: uuidv1(),
-//       customer_id: ctx.session.userId,
-//       customer_name: ctx.session.userName,
-//       title: name,
-//       url: content,
-//       finish_time: time,
-//       mark,
-//       created_by: ctx.session.userName,
-//       created_time: moment().format('YYYY-MM-DD HH:mm:ss')
-//     }
-//     DBHelper.addRow('orders', params).then(() => {
-//       ctx.body = {
-//         status: 200,
-//         statusText: 'ok',
-//         msg: '成功添加标签'
-//       }
-//     })
-//   }
+  async addOrder(ctx) {
+    console.log(111)
+    const { name, time, mark, content } = ctx.request.body
+    const params = {
+      id: uuidv1(),
+      customer_id: ctx.session.userId,
+      customer_name: ctx.session.userName,
+      title: name,
+      url: content,
+      finish_time: time,
+      mark,
+      created_by: ctx.session.userName,
+      created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+    }
+    DBHelper.addRow('orders', params).then(() => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        msg: '成功添加标签'
+      }
+    })
+  }
   async getCommitTable(ctx) {
     const { dept, search } = ctx.request.body
     const pageNum = parseInt(ctx.request.body.page || 1, 10)
