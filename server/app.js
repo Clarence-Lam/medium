@@ -5,6 +5,8 @@ const bodyParser = require('koa-bodyparser')
 const koaBody = require('koa-body')
 const helmet = require('koa-helmet')
 const respond = require('koa-respond')
+const serve = require('koa-static')
+const path = require('path')
 const logger = require('koa-logger')
 const Koa_Session = require('koa-session')
 const requireDirectory = require('require-directory')
@@ -18,7 +20,7 @@ const port = process.env.PORT || 3000
 // require('./router/index')(router)
 
 // 定义允许直接访问的url
-const allowpage = ['/', '/css/index.css', '/js/index.js', '/login', '/api/login', '/api/register', '/assets/0d93a56513016e7ce298a268f2602fa5.jpg']
+const allowpage = ['/static/css', '/static/js', '/static/img/', '/', '/css/index.css', '/js/index.js', '/login', '/api/login', '/api/register', '/assets/0d93a56513016e7ce298a268f2602fa5.jpg']
 
 const session_signed_key = ['medium'] // 这个是配合signed属性的签名key
 const session_config = {
@@ -37,8 +39,13 @@ app.keys = session_signed_key
 // 拦截
 function localFilter(ctx, next) {
   const url = ctx.originalUrl
+  console.log(url)
+  console.log(allowpage[0])
+  console.log(allowpage[0].indexOf(url))
   if (allowpage.indexOf(url) > -1) {
     console.log('当前地址可直接访问')
+    return next()
+  } else if (url.search(allowpage[0]) > -1 || url.search(allowpage[1]) > -1 || url.search(allowpage[2]) > -1) {
     return next()
   } else if (ctx.session && ctx.session.isLogin && ctx.session.userName) {
     console.log('正常访问')
@@ -81,8 +88,11 @@ app
 requireDirectory(module, './router', {
   visit: route => app.use(route.routes())
 })
+console.log(process.cwd())
 app
   .use(router.allowedMethods())
+  .use(serve(path.join(process.cwd(), 'downloads')))
+  .use(serve(path.join(process.cwd(), 'dist')))
   .listen(port, () => {
     console.log('The server is running at:')
     console.log(
