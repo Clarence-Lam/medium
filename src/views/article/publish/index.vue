@@ -21,10 +21,10 @@
     <el-dialog title="选择类型" :visible.sync="model1" width="30%">
       <div class="dialog-center">
         <router-link to="copy-write-platform">
-          <el-button type="info">已有文案直接发布</el-button>
+          <el-button type="primary" class="diglog-btn">已有文案直接发布</el-button>
         </router-link>
-        <router-link to="/">
-          <el-button type="info">无文案需代编辑</el-button>
+        <router-link to="write-platform">
+          <el-button type="success">无文案需代编辑</el-button>
         </router-link>
       </div>
 
@@ -84,20 +84,44 @@ export default {
 .documentation-container {
   margin: 50px;
   .document-btn {
-    float: left;
-    margin-left: 50px;
+    // float: left;
+    margin: 50px auto 0;
     display: block;
     cursor: pointer;
-    background: black;
+    // background: black;
+    // background-image: linear-gradient( 135deg, #3B2667 10%, #BC78EC 100%);
     color: white;
     height: 60px;
     width: 200px;
     line-height: 60px;
     font-size: 20px;
     text-align: center;
+    border-radius: 10px;
+  }
+  .document-btn:first-child {
+//       background: #4B79A1;  /* fallback for old browsers */
+// background: -webkit-linear-gradient(to right, #283E51, #4B79A1);  /* Chrome 10-25, Safari 5.1-6 */
+// background: linear-gradient(to right, #283E51, #4B79A1); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+background: #4169e1c9;
+  }
+  .document-btn:nth-child(2){
+//       background: #1D4350;  /* fallback for old browsers */
+// background: -webkit-linear-gradient(to right, #A43931, #1D4350);  /* Chrome 10-25, Safari 5.1-6 */
+// background: linear-gradient(to right, #A43931, #1D4350); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+background: #4169e1c9;
+  }
+  .document-btn:nth-child(3){
+//     background: #000428; /* fallback for old browsers */
+//   background: -webkit-linear-gradient(to right, #000428, #004e92); /* Chrome 10-25, Safari 5.1-6 */
+//   background: linear-gradient(to right, #000428, #004e92); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+background: #4169e1c9;
   }
 }
 .dialog-center{
     text-align: center;
 }
+.diglog-btn{
+    margin: 5px
+}
+
 </style>

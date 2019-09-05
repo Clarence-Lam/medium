@@ -9,6 +9,8 @@ const logger = require('koa-logger')
 const Koa_Session = require('koa-session')
 const requireDirectory = require('require-directory')
 
+const cron = require('./cron/index.js')
+
 const app = new Koa()
 const router = new Router()
 const port = process.env.PORT || 3000

@@ -8,6 +8,15 @@
           :type-name="item.name"
           :dept-name="item.dept"
         />
+        <el-tooltip
+          v-if="item.name === '包补时间'"
+          style="margin-left:10px"
+          effect="dark"
+          content="格式必须为数字+天数，例如‘3天’或‘7天以上’；‘XX天以上‘，需要手动更改状态为完成"
+          placement="top"
+        >
+          <i class="el-icon-question" />
+        </el-tooltip>
       </div>
 
     </template>

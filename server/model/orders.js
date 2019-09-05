@@ -41,3 +41,28 @@ exports.getArticleType = (value) => {
   const sql = `SELECT * FROM article_type where type_field_id = '${value}'`
   return query(sql)
 }
+
+exports.getOrderTable = (params, state, limit) => {
+  let str = ''
+  for (const item in params) {
+    str += ` AND ${item} = '${params[item]}'`
+  }
+  console.log(state)
+  if (state !== null) {
+    str += `AND state IN ('${state.join("','")}')`
+  }
+  const sql = `SELECT*FROM orders WHERE status = '1'  ${params || state ? str : ''} order by created_time desc limit ${limit[0]}, ${limit[1]}`
+  return query(sql)
+}
+exports.getOrderTableTotal = (params, state) => {
+  let str = ''
+  for (const item in params) {
+    str += ` AND ${item} = '${params[item]}'`
+  }
+  console.log(state)
+  if (state !== null) {
+    str += `AND state IN ('${state.join("','")}')`
+  }
+  const sql = `SELECT COUNT(*) AS count FROM orders WHERE status = '1'  ${params || state ? str : ''}`
+  return query(sql)
+}

@@ -3,7 +3,7 @@ import { deepClone } from '../../src/utils/index.js'
 import { asyncRoutes, constantRoutes } from './routes.js'
 
 const routes = deepClone([...constantRoutes, ...asyncRoutes])
-console.log(routes)
+
 const roles = [
   {
     key: 'admin',

@@ -20,7 +20,7 @@
           <!-- <div class="title-container">
           <h3 class="title">Login Form</h3>
         </div> -->
-          <br><br><br>
+          <br><br>
           <el-form-item prop="phone">
             <span class="svg-container">
               <svg-icon icon-class="user" />
@@ -49,17 +49,33 @@
               name="password"
               tabindex="2"
               auto-complete="on"
-              @keyup.enter.native="handleLogin"
+              @keyup.enter.native="register"
             />
             <span class="show-pwd" @click="showPwd">
               <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
             </span>
           </el-form-item>
 
-          <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">登录</el-button>
+          <el-form-item prop="yanzhengma">
+            <span class="svg-container">
+              <svg-icon icon-class="user" />
+            </span>
+            <el-input
+              ref="yanzhengma"
+              placeholder="验证码"
+              name="yanzhengma"
+              type="text"
+              tabindex="1"
+              auto-complete="on"
+            />
+
+          </el-form-item>
+          <el-button style="width:100%;margin-bottom:10px;">获取验证码</el-button>
+          <br>
+          <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="register">注册</el-button>
 
           <p class="foot-p">
-            <a target="_blank" @click.prevent="register()">注册</a>
+            <a target="_blank" @click.prevent="login()">已有账号，去登录</a>
           </p>
           <!-- <div class="tips">
           <span style="margin-right:20px;">username: admin</span>
@@ -124,20 +140,15 @@ export default {
         this.$refs.password.focus()
       })
     },
-    register() {
-      this.$router.push({ path: 'register' })
+    login() {
+      this.$router.push({ path: 'login' })
     },
-    handleLogin() {
+    register() {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
           this.$store.dispatch('user/login', this.loginForm).then((res) => {
-            console.log(res)
-            if (res.role === 'customer') {
-              this.$router.push({ path: this.redirect || '/' })
-            } else {
-              this.$router.push({ path: this.redirect || '/order/controller' })
-            }
+            this.$router.push({ path: this.redirect || '/' })
             this.loading = false
           }).catch((msg) => {
             this.$message.error(msg)

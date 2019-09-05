@@ -138,7 +138,7 @@ export default {
   },
   methods: {
     getList() {
-      getCommitTable({ dept: this.dept, search: this.caseForm }).then(res => {
+      getCommitTable({ dept: this.dept, search: this.caseForm, page: this.listQuery.page }).then(res => {
         const data = []
         for (const item of res.data) {
           item['num'] = item.start_num

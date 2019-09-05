@@ -15,21 +15,20 @@
       </div>
       <CommitTable
         ref="table"
-        :dept="this.$route.params.dept"
+        :dept="'platform'"
         :case-form="caseForm"
       />
     </div>
-    <CommitNum :multiple-selection="multipleSelection" />
   </div>
 </template>
 <script>
 import { getTypesName, getTypesContent } from '@/api/setting'
-import { addOrder } from '@/api/orders'
+// import { addOrder } from '@/api/orders'
 
 import CommitTable from '../components/commit-table'
-import CommitNum from '../components/commit-num'
+// import CommitNum from '../components/commit-num'
 export default {
-  components: { CommitTable, CommitNum },
+  components: { CommitTable },
   data() {
     return {
       drawer: true,
@@ -42,23 +41,14 @@ export default {
     }
   },
   created() {
-    // this.getTypesName()
-    if (this.$route.params.dept && this.$store.state.title) {
-      this.getTypesName()
-    } else {
-      this.$router.push(
-        {
-          name: 'publish'
-        }
-      )
-    }
+    this.getTypesName()
   },
   updated() {
     getTypesContent
   },
   methods: {
     getTypesName() {
-      const dept = this.$route.params.dept
+      const dept = 'platform'
       getTypesName({ dept: dept }).then(res => {
         this.typesName = res.data
         for (const item of res.data) {
@@ -78,52 +68,6 @@ export default {
     },
     delSelection(item) {
       this.$refs.table.delSelection(item)
-    },
-    goBack() {
-      this.$router.push(
-        {
-          name: 'copy-write-platform',
-          params: {
-            goback: true
-          }
-        }
-      )
-    },
-    submit() {
-      let num = 0
-      let money = 0
-      this.multipleSelection.forEach(i => {
-        num += Number(i.num)
-        if (this.$store.state.user && this.$store.state.user.level === 1) {
-          money += i.general_price * i.num
-        } else {
-          money += i.agent_price * i.num
-        }
-      })
-      const form = {
-        title: this.$store.state.title,
-        finish_time: this.$store.state.time,
-        mark: this.$store.state.mark,
-        url: this.$store.state.url,
-        cases: this.multipleSelection,
-        dept: this.$route.params.dept,
-        num,
-        money,
-        sign: 'copy_write'
-      }
-      addOrder({ ...form }).then(res => {
-        if (res.status === 200) {
-          this.$message({
-            message: '成功创建订单',
-            type: 'success'
-          })
-          this.$store.state.title = ''
-          this.$store.state.time = ''
-          this.$store.state.mark = ''
-          this.$store.state.url = ''
-          this.$router.push('/myOrder/my')
-        }
-      })
     }
   }
 }

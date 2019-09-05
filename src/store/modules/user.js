@@ -38,7 +38,7 @@ const actions = {
           const data = response
           commit('SET_TOKEN', data.token)
           setToken(data.token)
-          resolve()
+          resolve(response)
         } else {
           reject(response.statusText)
         }

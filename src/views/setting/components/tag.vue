@@ -3,7 +3,7 @@
     <el-tag
       v-for="tag in dynamicTags"
       :key="tag.id"
-      :closable="typeName!=='排序'"
+      :closable="typeName!=='排序' && tag.name !== '不包补'"
       :disable-transitions="false"
       @close="handleClose(tag.id)"
     >

@@ -31,8 +31,8 @@
           <el-input v-model="form.mark" style="width:300px" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" style="float:right" @click="showDetail">预览</el-button>
           <el-button type="primary" style="float:right" @click="onSubmit">下一步</el-button>
+          <el-button type="primary" style="float:right;margin-right:20px" @click="showDetail">预览</el-button>
         </el-form-item>
       </el-form>
 
@@ -133,7 +133,18 @@ export default {
       this.disabled = true
     },
     showDetail() {
-      console.log(111)
+    //   this.$router.push(`/preview`)
+      const { href } = this.$router.resolve({
+        name: 'preview',
+        params: {
+          asdasda: '12312312',
+          content: this.content
+        },
+        query: {
+          content: this.content
+        }
+      })
+      window.open(href, '_blank')
     }
   }
 }
