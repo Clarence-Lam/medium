@@ -39,6 +39,14 @@ export function getTypesName(query) {
   })
 }
 
+export function getExpectedTime(query) {
+  return request({
+    url: '/setting/getExpectedTime',
+    method: 'get',
+    params: query
+  })
+}
+
 export function getTypesContent(query) {
   return request({
     url: '/setting/getTypesContent',
@@ -130,5 +138,68 @@ export function getArticleType(query) {
     url: '/setting/getArticleType',
     method: 'get',
     params: query
+  })
+}
+
+export function addExpectedTime(data) {
+  return request({
+    url: '/setting/addExpectedTime',
+    method: 'post',
+    data
+  })
+}
+
+export function delExpectedTime(id) {
+  return request({
+    url: `/setting/delExpectedTime/${id}`,
+    method: 'delete'
+  })
+}
+
+export function changeDefault(data) {
+  return request({
+    url: '/setting/changeDefault',
+    method: 'post',
+    data
+  })
+}
+
+// 获取最后一条公告
+export function getLastPublic() {
+  return request({
+    url: '/setting/getLastPublic',
+    method: 'get'
+  })
+}
+
+// 客户获取最后一条公告，并查询是否已读
+// export function getPublic() {
+//   return request({
+//     url: '/setting/getPublic',
+//     method: 'get'
+//   })
+// }
+
+export function addPublic(data) {
+  return request({
+    url: '/setting/addPublic',
+    method: 'post',
+    data
+  })
+}
+
+export function getCustomer(query) {
+  return request({
+    url: '/setting/getCustomer',
+    method: 'get',
+    params: query
+  })
+}
+
+export function updateCust(data) {
+  return request({
+    url: '/setting/updateCust',
+    method: 'post',
+    data
   })
 }

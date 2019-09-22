@@ -1,6 +1,14 @@
 <template>
   <div class="components-container">
-
+    <div v-if="$store.state.user.roles[0] === 'admin'||$store.state.user.roles[0] === 'service'" class="order_search">
+      <el-select v-model="state" placeholder="请选择">
+        <el-option label="全部订单" value="" />
+        <el-option label="未分配订单" value="start" />
+        <el-option label="完成订单" value="finish" />
+        <el-option label="投诉订单" value="complaining" />
+      </el-select>
+      <el-button size="medium" type="primary" @click="getData()">查询</el-button>
+    </div>
     <el-table
       :key="0"
       v-loading="loading"
@@ -48,7 +56,7 @@
       </el-table-column>
       <el-table-column label="状态" prop="state" align="center">
         <template slot-scope="scope">
-          <span>{{ returnState(scope.row.state) }}</span>
+          <span :style="scope.row.state==='complaining'?'color:red':''">{{ returnState(scope.row.state) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" width="230" class-name="small-padding fixed-width">
@@ -82,7 +90,8 @@ export default {
       listQuery: {
         page: 1,
         limit: 10
-      }
+      },
+      state: ''// 查询的状态
     }
   },
   computed: {
@@ -101,16 +110,18 @@ export default {
         stop: '合作停',
         finish: '已完成',
         uphold: '维护中',
-        reject: '已拒绝'
+        reject: '已拒绝',
+        complaining: '投诉中'
       }
       return state[value]
     },
     cutID(value) {
-      return value.split('-')[0]
+    //   return value.split('-')[0]
+      return value.replace(/-/g, '')
     },
     getData() {
       this.loading = true
-      getOrderTable({ page: this.listQuery.page }).then(res => {
+      getOrderTable({ page: this.listQuery.page, request_state: this.state }).then(res => {
         if (res.status === 200) {
           this.tableData = res.data
           this.total = res.num
@@ -131,3 +142,8 @@ export default {
   }
 }
 </script>
+<style scoped>
+.order_search{
+    margin: 20px 0;
+}
+</style>

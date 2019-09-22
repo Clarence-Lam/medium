@@ -2,7 +2,7 @@
   <div>
     <div class="filter-container">
       <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">
-        增加案例
+        增加产品
       </el-button>
     </div>
     <el-table

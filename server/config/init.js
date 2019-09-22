@@ -36,15 +36,15 @@ ALTER TABLE types_field COMMENT '文章配置';
 CREATE TABLE article_cases(
     id VARCHAR(64) NOT NULL   COMMENT 'id' ,
     dept VARCHAR(32)    COMMENT '主题 类似cm008,platform为你平台、medium为媒体、question为问答' ,
-    type_json VARCHAR(3072)    COMMENT '类型集合 以json形式进行存储，格式为{id1-1:id2-1,id1-2:id2-2}，id1-*为types表id，id2-*为type_name表id' ,
+    type_json TEXT    COMMENT '类型集合 以json形式进行存储，格式为{id1-1:id2-1,id1-2:id2-2}，id1-*为types表id，id2-*为type_name表id' ,
     name VARCHAR(128)    COMMENT '名称 名称与平台有可能合一，先按名称来做，需要再分开' ,
     platform VARCHAR(128)    COMMENT '平台' ,
     url VARCHAR(1024)    COMMENT '链接 案例链接' ,
     agent_price DECIMAL(32,8)    COMMENT '代理价格' ,
     general_price DECIMAL(32,8)    COMMENT '普通用户价格' ,
     baidu INT    COMMENT '百度权重' ,
-    start_num VARCHAR(32)    COMMENT '起始下单量' ,
-    fens_num VARCHAR(32)    COMMENT '参考粉丝数' ,
+    start_num INT    COMMENT '起始下单量' ,
+    fens_num INT    COMMENT '参考粉丝数' ,
     maintain_time INT    COMMENT '维护时间' ,
     yiwenjida VARCHAR(32)    COMMENT '一问几答' ,
     mark VARCHAR(512)    COMMENT '备注' ,
@@ -104,6 +104,7 @@ CREATE TABLE user(
     created_time DATETIME    COMMENT '创建时间' ,
     updated_by VARCHAR(32)    COMMENT '更新人' ,
     updated_time DATETIME    COMMENT '更新时间' ,
+    last_time DATETIME    COMMENT '最近登录时间' ,
     PRIMARY KEY (id)
 ) COMMENT = '用户表 ';
 
@@ -120,12 +121,14 @@ CREATE TABLE customer(
     company VARCHAR(128)    COMMENT '公司名' ,
     channel VARCHAR(128)    COMMENT '途径' ,
     first_time VARCHAR(1)   DEFAULT 1 COMMENT '是否第一次登录' ,
-    level VARCHAR(32)    COMMENT '等级' ,
+    level VARCHAR(32)   DEFAULT 1 COMMENT '等级' ,
     status VARCHAR(1)   DEFAULT 1 COMMENT '状态 启用为1，删除为0' ,
     created_by VARCHAR(32)    COMMENT '创建人' ,
     created_time DATETIME    COMMENT '创建时间' ,
     updated_by VARCHAR(32)    COMMENT '更新人' ,
     updated_time DATETIME    COMMENT '更新时间' ,
+    last_time DATETIME    COMMENT '最近登录时间' ,
+    mark VARCHAR(3072)    COMMENT '备注' ,
     PRIMARY KEY (id)
 ) COMMENT = '客户表 ';
 
@@ -134,17 +137,24 @@ CREATE TABLE orders(
     id VARCHAR(64) NOT NULL   COMMENT 'id' ,
     customer_id VARCHAR(64) NOT NULL   COMMENT '客户id' ,
     customer_name VARCHAR(128) NOT NULL   COMMENT '客户名称' ,
+    customer_level VARCHAR(32)    COMMENT '客户等级' ,
     title VARCHAR(128) NOT NULL   COMMENT '文章标题' ,
-    url VARCHAR(1024)    COMMENT '文档地址 用于存放上传的word转化后的html' ,
+    url MEDIUMTEXT    COMMENT '文档地址 用于存放上传的word转化后的html' ,
     finish_time INT    COMMENT '希望多久完成' ,
     media VARCHAR(128)    COMMENT '媒体名称' ,
-    case_id_json VARCHAR(3072)    COMMENT '案例id集合 存放案例的集合' ,
+    dept VARCHAR(32)    COMMENT '类型' ,
+    sign VARCHAR(32)    COMMENT '类型 区分发布或代写' ,
+    case_id_json TEXT    COMMENT '案例id集合 存放案例的集合' ,
     case_name VARCHAR(128)    COMMENT '案例名称' ,
     num INT    COMMENT '数量 文章数量总数' ,
     money DECIMAL(32,8)    COMMENT '费用' ,
-    state VARCHAR(32)    COMMENT '状态' ,
+    work_nunber INT    COMMENT '字数 存放代写的字数' ,
+    type_article VARCHAR(128)    COMMENT '体裁 存放代写的体裁' ,
+    state VARCHAR(32)   DEFAULT 'start' COMMENT '状态' ,
+    is_add VARCHAR(1)   DEFAULT 0 COMMENT '是否补档' ,
     published_time DATETIME    COMMENT '发布时间' ,
     status VARCHAR(1)   DEFAULT 1 COMMENT '状态 启用为1，删除为0' ,
+    refuse_reason VARCHAR(1024)    COMMENT '拒绝理由' ,
     created_by VARCHAR(32)    COMMENT '创建人' ,
     created_time DATETIME    COMMENT '创建时间' ,
     updated_by VARCHAR(32)    COMMENT '更新人' ,
@@ -159,12 +169,18 @@ ALTER TABLE orders COMMENT '订单表';
 CREATE TABLE order_url(
     id VARCHAR(64) NOT NULL   COMMENT 'id' ,
     order_id VARCHAR(64)    COMMENT '订单id' ,
+    order_name VARCHAR(128)    COMMENT '订单名称' ,
+    name VARCHAR(128)    COMMENT '名称' ,
     url VARCHAR(1024)    COMMENT '地址' ,
     add_url VARCHAR(1024)    COMMENT '补档地址' ,
     created_by VARCHAR(32)    COMMENT '创建人' ,
     created_time DATETIME    COMMENT '创建时间' ,
     updated_by VARCHAR(32)    COMMENT '更新人' ,
     updated_time DATETIME    COMMENT '更新时间' ,
+    is_add VARCHAR(1)   DEFAULT 0 COMMENT '是否申请补档' ,
+    added VARCHAR(1)   DEFAULT 0 COMMENT '是否补过档' ,
+    reason VARCHAR(3072)    COMMENT '补档理由' ,
+    status VARCHAR(1)   DEFAULT 1 COMMENT '状态' ,
     PRIMARY KEY (id)
 ) COMMENT = '订单链接地址 ';
 
@@ -183,6 +199,76 @@ CREATE TABLE order_case(
 ) COMMENT = '订单案例集合 存放下单时，客户选择的案例';
 
 ALTER TABLE order_case COMMENT '订单案例集合';
+CREATE TABLE remind(
+    id VARCHAR(64) NOT NULL   COMMENT 'id' ,
+    type VARCHAR(32)    COMMENT '提醒类型 提醒类型，暂时为补单' ,
+    user_roles VARCHAR(32)    COMMENT '提醒人 提醒对象，暂时为all' ,
+    customer_id VARCHAR(64)    COMMENT '客户id' ,
+    order_id VARCHAR(64)    COMMENT '订单id' ,
+    url_id VARCHAR(64)    COMMENT '补单id' ,
+    readed VARCHAR(1)   DEFAULT 0 COMMENT '是否已读' ,
+    mark VARCHAR(3072)    COMMENT '备注' ,
+    status VARCHAR(1)   DEFAULT 1 COMMENT '状态 启用为1，删除为0' ,
+    created_by VARCHAR(32)    COMMENT '创建人' ,
+    created_time DATETIME    COMMENT '创建时间' ,
+    updated_by VARCHAR(32)    COMMENT '更新人' ,
+    updated_time DATETIME    COMMENT '更新时间' ,
+    PRIMARY KEY (id)
+) COMMENT = '消息提醒表 客户提交补单申请，提醒客户或技术';
+
+ALTER TABLE remind COMMENT '消息提醒表';
+CREATE TABLE public(
+    id VARCHAR(64) NOT NULL   COMMENT 'id' ,
+    content TEXT    COMMENT '内容' ,
+    status VARCHAR(1)   DEFAULT 1 COMMENT '状态 启用为1，删除为0' ,
+    created_by VARCHAR(32)    COMMENT '创建人' ,
+    created_time DATETIME    COMMENT '创建时间' ,
+    updated_by VARCHAR(32)    COMMENT '更新人' ,
+    updated_time DATETIME    COMMENT '更新时间' ,
+    PRIMARY KEY (id)
+) COMMENT = '公告表 存放公告内容';
+
+ALTER TABLE public COMMENT '公告表';
+CREATE TABLE readed(
+    id VARCHAR(64) NOT NULL   COMMENT 'id' ,
+    public_id VARCHAR(64)    COMMENT '公告id' ,
+    status VARCHAR(1)   DEFAULT 1 COMMENT '状态 启用为1，删除为0' ,
+    created_by VARCHAR(32)    COMMENT '创建人' ,
+    created_time DATETIME    COMMENT '创建时间' ,
+    updated_by VARCHAR(32)    COMMENT '更新人' ,
+    updated_time DATETIME    COMMENT '更新时间' ,
+    PRIMARY KEY (id)
+) COMMENT = '已读表 存储客户已读的公告，确保不会重复已读';
+
+ALTER TABLE readed COMMENT '已读表';
+CREATE TABLE expected_time(
+    id VARCHAR(64) NOT NULL   COMMENT 'id' ,
+    dept VARCHAR(32)    COMMENT '类型 区分平台、媒体、问答' ,
+    name VARCHAR(128)    COMMENT '名称' ,
+    is_default VARCHAR(1)   DEFAULT 0 COMMENT '是否默认' ,
+    status VARCHAR(1)   DEFAULT 1 COMMENT '状态 启用为1，删除为0' ,
+    created_by VARCHAR(32)    COMMENT '创建人' ,
+    created_time DATETIME    COMMENT '创建时间' ,
+    updated_by VARCHAR(32)    COMMENT '更新人' ,
+    updated_time DATETIME    COMMENT '更新时间' ,
+    PRIMARY KEY (id)
+) COMMENT = '预期完成时间 存放技术设置的预期完成时间';
+
+ALTER TABLE expected_time COMMENT '预期完成时间';
+CREATE TABLE collection(
+    id VARCHAR(64) NOT NULL   COMMENT 'id' ,
+    customer_id VARCHAR(64)    COMMENT '客户id' ,
+    case_id VARCHAR(64)    COMMENT '案例id' ,
+    status VARCHAR(1)   DEFAULT 1 COMMENT '状态 启用为1，删除为0' ,
+    created_by VARCHAR(32)    COMMENT '创建人' ,
+    created_time DATETIME    COMMENT '创建时间' ,
+    updated_by VARCHAR(32)    COMMENT '更新人' ,
+    updated_time DATETIME    COMMENT '更新时间' ,
+    PRIMARY KEY (id)
+) COMMENT = '收藏表 用户收藏的案例';
+
+ALTER TABLE collection COMMENT '收藏表';
+
 
 `
 

@@ -15,7 +15,6 @@ exports.getOrderCases = (table, limit, value, inArr, orderBy) => {
     }
   }
   const sql = `SELECT*FROM ${table} WHERE 1=1 ${inArr || value ? str : ''} ${orderBy !== '' ? 'ORDER BY ' + orderBy + ' ASC' : ''} limit ${limit[0]}, ${limit[1]}`
-  console.log(sql)
   return query(sql)
 }
 
@@ -45,7 +44,9 @@ exports.getArticleType = (value) => {
 exports.getOrderTable = (params, state, limit) => {
   let str = ''
   for (const item in params) {
-    str += ` AND ${item} = '${params[item]}'`
+    if (params[item]) {
+      str += ` AND ${item} = '${params[item]}'`
+    }
   }
   console.log(state)
   if (state !== null) {
@@ -64,5 +65,10 @@ exports.getOrderTableTotal = (params, state) => {
     str += `AND state IN ('${state.join("','")}')`
   }
   const sql = `SELECT COUNT(*) AS count FROM orders WHERE status = '1'  ${params || state ? str : ''}`
+  return query(sql)
+}
+
+exports.delCollectionByCaseId = (caseid, userid) => {
+  const sql = `DELETE FROM collection WHERE case_id='${caseid}' AND customer_id='${userid}'`
   return query(sql)
 }

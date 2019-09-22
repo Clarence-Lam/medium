@@ -4,6 +4,7 @@ const SettingModel = require('../model/setting.js')
 const uuidv1 = require('uuid/v1')
 const moment = require('moment')
 const bcrypt = require('bcrypt')
+const _ = require('lodash')
 
 const SALT_WORK_FACTOR = 10
 const roles = {
@@ -154,6 +155,22 @@ class SettingController {
     })
   }
 
+  async getExpectedTime(ctx) {
+    const dept = ctx.query.dept
+    const params = {
+      dept
+    }
+    await DBHelper.getList('expected_time', [0, 100], params).then(result => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        data: _.sortBy(result, function(item) {
+          return item.name
+        })
+      }
+    })
+  }
+
   async getTypesContent(ctx) {
     const id = ctx.query.id
     await DBHelper.getList('types_field', [0, 100], { type: id }).then(result => {
@@ -192,6 +209,55 @@ class SettingController {
         statusText: 'ok',
         msg: '成功添加标签'
       }
+    })
+  }
+
+  async addExpectedTime(ctx) {
+    const { name, dept } = ctx.request.body
+    const params = {
+      id: uuidv1(),
+      name,
+      dept,
+      created_by: ctx.session.userName,
+      created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+    }
+    await DBHelper.addRow('expected_time', params).then(() => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        msg: '成功添加标签'
+      }
+    })
+  }
+
+  async delExpectedTime(ctx) {
+    await DBHelper.delRow('expected_time', ctx.params.id).then(() => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        msg: '成功删除标签'
+      }
+    })
+  }
+
+  async changeDefault(ctx) {
+    const { id, dept } = ctx.request.body
+    const values = {
+      is_default: '0',
+      updated_by: ctx.session.userName,
+      created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+    }
+    const conditions = {
+      dept
+    }
+    return DBHelper.updateByParams('expected_time', values, conditions).then(() => {
+      return DBHelper.updateRow('expected_time', id, { is_default: '1' }).then(() => {
+        ctx.body = {
+          status: 200,
+          statusText: 'ok',
+          msg: '成功更改默认时间'
+        }
+      })
     })
   }
 
@@ -258,14 +324,15 @@ class SettingController {
 
   async createCase(ctx) {
     const Setting = new SettingController()
-    const { name, agent_price, general_price, baidu, platform, start_num, tags, url, dept, mark } = ctx.request.body
+    const { name, agent_price, general_price, baidu, platform, start_num, tags, url, dept, mark, yiwenjida, fens_num } = ctx.request.body
     const caseID = uuidv1()
     const params = {
       id: caseID,
       name, agent_price, general_price, baidu, platform, start_num, type_json: JSON.stringify(tags), url,
       dept, mark,
       created_by: ctx.session.userName,
-      created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+      created_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+      yiwenjida, fens_num
     }
     await DBHelper.addRow('article_cases', params).then(async() => {
     //   for (const item of tags) {
@@ -275,14 +342,15 @@ class SettingController {
   }
 
   async updateCase(ctx) {
-    const { id, name, agent_price, general_price, baidu, platform, start_num, tags, url, dept, mark } = ctx.request.body
+    const { id, name, agent_price, general_price, baidu, platform, start_num, tags, url, dept, mark, yiwenjida, fens_num } = ctx.request.body
 
     return SettingModel.delArticleType(id).then(async() => {
       const params = {
         name, agent_price, general_price, baidu, platform, start_num, type_json: JSON.stringify(tags), url,
         dept, mark,
         updated_by: ctx.session.userName,
-        updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
+        updated_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+        yiwenjida, fens_num
       }
       return await DBHelper.updateRow('article_cases', id, params).then(async() => {
         const Setting = new SettingController()
@@ -316,7 +384,7 @@ class SettingController {
       ctx.body = {
         status: 200,
         statusText: 'ok',
-        msg: '成功删除案例'
+        msg: '成功删除产品'
       }
     })
   }
@@ -367,6 +435,68 @@ class SettingController {
       status: 200,
       statusText: 'ok'
     }
+  }
+
+  async getLastPublic(ctx) {
+    return DBHelper.getList('public', [0, 1], {}).then(result => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        data: result
+      }
+    })
+  }
+
+  async addPublic(ctx) {
+    const params = {
+      id: uuidv1(),
+      content: ctx.request.body.content,
+      created_by: ctx.session.userName,
+      created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+    }
+    await DBHelper.addRow('public', params).then(() => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        msg: '成功创建公告'
+      }
+    })
+  }
+
+  async getCustomer(ctx) {
+    const { name } = ctx.query
+    const pageNum = parseInt(ctx.query.page || 1, 10)// 页码
+    const end = 10 // 默认页数
+    const start = (pageNum - 1) * end
+    const limit = [start, end]
+    return Promise.all(
+      [
+        userModel.searchCusts({}, { name }, limit),
+        userModel.searchCustsTotal({}, { name }, limit)
+      ]).then(result => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        data: result[0],
+        num: result[1][0].count
+      }
+    })
+  }
+
+  async updateCust(ctx) {
+    const { id, infoForm } = ctx.request.body
+    const params = {
+      ...infoForm,
+      updated_by: ctx.session.userName,
+      updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
+    }
+    return DBHelper.updateRow('customer', id, params).then(result => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        msg: '更新成功'
+      }
+    })
   }
 
   // 数据分组

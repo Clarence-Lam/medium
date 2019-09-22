@@ -17,11 +17,15 @@
           <div class="order-detail">
             <div>
               <p class="detail-title">订单编号：</p>
-              <span>{{ order.id }}</span>
+              <span v-if="order.id">{{ order.id.replace(/-/g, '') }}</span>
             </div>
             <div>
               <p class="detail-title">状态：</p>
               <span>{{ returnState(order.state) }}</span>
+            </div>
+            <div>
+              <p v-if="order.refuse_reason" class="detail-title">拒绝理由：</p>
+              <span>{{ order.refuse_reason }}</span>
             </div>
             <div>
               <p class="detail-title">文章标题：</p>
@@ -69,7 +73,7 @@
       <el-col v-if="order.sign === 'copy_write'" :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
         <el-card class="box-card">
           <div slot="header" class="clearfix">
-            <span>所属案例</span>
+            <span>所属产品</span>
           </div>
           <div class="case-content">
             <el-table
@@ -94,7 +98,11 @@
               </el-table-column>
               <el-table-column v-for="item in tableLable" :key="item.key" :label="item.title" :prop="item.key" align="center">
                 <template slot-scope="scope">
-                  <span>{{ scope.row[item.key] }}</span>
+                  <span v-if="item.key==='agent_price'">{{ $store.state.user.level === '1' ? '代理可看': scope.row[item.key] }}</span>
+                  <div v-else-if="item.key==='baidu'">
+                    <img :src="getImgUrl(scope.row[item.key])" alt="权重" class="baidu">
+                  </div>
+                  <span v-else>{{ scope.row[item.key] }}</span>
                 </template>
               </el-table-column>
             </el-table>
@@ -115,7 +123,7 @@
           </div>
           <div class="blog-content">
             <div style="margin:20px">
-              <el-button type="primary" @click="toAddUrl()">申请补档</el-button>
+              <el-button type="primary" @click="toAddUrl()">申请补单</el-button>
             </div>
           </div>
         </el-card>
@@ -147,6 +155,27 @@ const tableLable = {
       title: '备注',
       key: 'mark'
     }
+  ],
+  medium: [
+    {
+      title: '平台',
+      key: 'platform'
+    }, {
+      title: '代理价格',
+      key: 'agent_price'
+    }, {
+      title: '普通用户价格',
+      key: 'general_price'
+    }, {
+      title: '百度权重',
+      key: 'baidu'
+    }, {
+      title: '参考粉丝数',
+      key: 'fens_num'
+    }, {
+      title: '备注',
+      key: 'mark'
+    }
   ]
 }
 
@@ -174,7 +203,8 @@ export default {
         stop: '合作停',
         finish: '已完成',
         uphold: '维护中',
-        reject: '已拒绝'
+        reject: '已拒绝',
+        complaining: '投诉中'
       }
       return state[value]
     },
@@ -219,10 +249,13 @@ export default {
         {
           name: 'addMyUrl',
           params: {
-            id: this.$route.params.id
+            id: this.$route.params.id,
+            disable: this.order.state === 'finish'
           }
         }
       )
+    }, getImgUrl(i) {
+      return require('@/assets/images/baidu' + i + '.png')
     }
   }
 }
@@ -234,6 +267,9 @@ export default {
 .detail-title{
     display: inline-block;
     margin: 10px;
+}
+.baidu{
+    width:75%;
 }
 </style>
 <style>

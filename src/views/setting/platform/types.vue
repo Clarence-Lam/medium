@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <h3 style="padding-left: 20px;">平台推广配置</h3>
-    <TypeName :types-name="typesName" />
+    <TypeName :types-name="typesName" :dept="'platform'" />
   </div>
 </template>
 <script>
@@ -12,7 +12,8 @@ export default {
   components: { TypeName },
   data() {
     return {
-      typesName: []
+      typesName: [],
+      expectedTime: []
     }
   },
   created() {

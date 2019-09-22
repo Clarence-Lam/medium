@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="nav-menu">
     <!-- <el-menu router :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
       <el-submenu index="2" class="breadcrumb-menu">
         <template slot="title">问答推广</template>
@@ -19,9 +19,12 @@
     </el-menu> -->
     <el-menu
       router
-      :default-active="activeIndex"
+      :default-active="activeMenu"
       class="el-menu-demo"
       mode="horizontal"
+      background-color="rgb(27,28,35)"
+      text-color="#fff"
+      active-text-color="#409EFF"
       @select="handleSelect"
     >
       <!-- <sidebar-item v-for="route in permission_routes" :key="route.path" :item="route" :base-path="route.path" /> -->
@@ -90,7 +93,7 @@ export default {
   data() {
     return {
       levelList: null,
-      activeIndex: '1',
+      //   activeIndex: '1',
       activeIndex2: '1',
       onlyOneChild: null
     }
@@ -219,5 +222,8 @@ export default {
         height: 50px;
         line-height: 50px;
     }
+.nav-menu .el-menu-item:hover{
+    background: rgb(44,46,57) !important
+}
 </style>
 

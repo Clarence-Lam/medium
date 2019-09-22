@@ -12,6 +12,7 @@ const Koa_Session = require('koa-session')
 const requireDirectory = require('require-directory')
 
 const cron = require('./cron/index.js')
+const logsUtil = require('./helper/logs.js')
 
 const app = new Koa()
 const router = new Router()
@@ -20,7 +21,7 @@ const port = process.env.PORT || 3000
 // require('./router/index')(router)
 
 // 定义允许直接访问的url
-const allowpage = ['/static/css', '/static/js', '/static/img/', '/', '/css/index.css', '/js/index.js', '/login', '/api/login', '/api/register', '/assets/0d93a56513016e7ce298a268f2602fa5.jpg']
+const allowpage = ['/static/css', '/static/js', '/static/fonts', '/static/img/', '/', '/css/index.css', '/js/index.js', '/login', '/adminLogin', '/api/login', '/api/adminLogin', '/api/register', '/assets/0d93a56513016e7ce298a268f2602fa5.jpg']
 
 const session_signed_key = ['medium'] // 这个是配合signed属性的签名key
 const session_config = {
@@ -39,9 +40,6 @@ app.keys = session_signed_key
 // 拦截
 function localFilter(ctx, next) {
   const url = ctx.originalUrl
-  console.log(url)
-  console.log(allowpage[0])
-  console.log(allowpage[0].indexOf(url))
   if (allowpage.indexOf(url) > -1) {
     console.log('当前地址可直接访问')
     return next()
@@ -82,6 +80,20 @@ app
   .use(async(ctx, next) => {
     await localFilter(ctx, next)
     // await next()
+  })
+  .use(async(ctx, next) => {
+    const start = new Date() // 响应开始时间
+    let intervals // 响应间隔时间
+    try {
+      await next()
+      intervals = new Date() - start
+      logsUtil.logResponse(ctx, intervals) // 记录响应日志
+    } catch (error) {
+      console.log('======================出错了============================')
+      console.log(error)
+      intervals = new Date() - start
+      logsUtil.logError(ctx, error, intervals)// 记录异常日志
+    }
   })
 //   .use(router.routes())
 

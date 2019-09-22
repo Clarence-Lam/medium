@@ -2,10 +2,10 @@
   <div class="app-container">
     <h3>{{ textMap[this.$route.params.dialogStatus] }}</h3>
     <el-form ref="caseForm" :model="caseForm" :rules="rules" label-width="150px" label-position="left" style="width: 400px; margin-left:50px;">
-      <el-form-item label="案例名称：" prop="name">
+      <el-form-item label="产品名称：" prop="name">
         <el-input v-model="caseForm.name" />
       </el-form-item>
-      <el-form-item label="案例链接：" prop="url">
+      <el-form-item label="产品链接：" prop="url">
         <el-input v-model="caseForm.url" />
       </el-form-item>
       <el-form-item label="平台：" required prop="platform">
@@ -63,8 +63,8 @@ export default {
     return {
       dialogStatus: '',
       textMap: {
-        update: '修改案例',
-        create: '新增案例'
+        update: '修改产品',
+        create: '新增产品'
       },
       caseForm: {
         name: '',
@@ -81,11 +81,11 @@ export default {
       selectData: {},
       rules: {
         name: [
-          { required: true, message: '请输入案例名称', trigger: 'blur' },
+          { required: true, message: '请输入产品名称', trigger: 'blur' },
           { min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur' }
         ],
         url: [
-          { type: 'url', required: true, message: '请输入案例链接地址', trigger: 'blur' }
+          { type: 'url', required: true, message: '请输入产品链接地址', trigger: 'blur' }
         ],
         platform: [
           { required: true, message: '请输入平台', trigger: 'blur' }
@@ -165,7 +165,7 @@ export default {
             updateCase(params).then(res => {
               if (res.status === 200) {
                 this.$message({
-                  message: '案例修改成功',
+                  message: '产品修改成功',
                   type: 'success'
                 })
                 this.$router.push({ name: 'platform-cases' })
@@ -175,7 +175,7 @@ export default {
             createCase(params).then(res => {
               if (res.status === 200) {
                 this.$message({
-                  message: '创建案例成功',
+                  message: '创建产品成功',
                   type: 'success'
                 })
                 this.$router.push({ name: 'platform-cases' })
@@ -191,7 +191,6 @@ export default {
     changeData(value, obj) {
       const v = obj.find(d => d.id === value)
       this.tagsValue[v.type_name] = v
-      console.log(this.tagsValue)
     }
   }
 }

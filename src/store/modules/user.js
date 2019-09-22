@@ -1,4 +1,4 @@
-import { login, logout, getInfo } from '@/api/user'
+import { login, logout, getInfo, adminLogin } from '@/api/user'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import router, { resetRouter } from '@/router'
 
@@ -7,7 +7,9 @@ const state = {
   name: '',
   avatar: '',
   introduction: '',
-  roles: []
+  roles: [],
+  level: '',
+  lastTime: ''
 }
 
 const mutations = {
@@ -25,6 +27,12 @@ const mutations = {
   },
   SET_ROLES: (state, roles) => {
     state.roles = roles
+  },
+  SET_LEVEL: (state, level) => {
+    state.level = level
+  },
+  SET_LASTTIME: (state, lastTime) => {
+    state.lastTime = lastTime
   }
 }
 
@@ -34,6 +42,23 @@ const actions = {
     const { phone, password } = userInfo
     return new Promise((resolve, reject) => {
       login({ phone: phone.trim(), password: password }).then(response => {
+        if (response.status === 200) {
+          const data = response
+          commit('SET_TOKEN', data.token)
+          setToken(data.token)
+          resolve(response)
+        } else {
+          reject(response.statusText)
+        }
+      }).catch(error => {
+        reject(error)
+      })
+    })
+  },
+  adminLogin({ commit }, userInfo) {
+    const { phone, password } = userInfo
+    return new Promise((resolve, reject) => {
+      adminLogin({ phone: phone.trim(), password: password }).then(response => {
         if (response.status === 200) {
           const data = response
           commit('SET_TOKEN', data.token)
@@ -58,7 +83,7 @@ const actions = {
           reject('验证登录失败，请重新登录.')
         }
 
-        const { roles, name, avatar, introduction } = data
+        const { roles, name, avatar, introduction, level, lastTime } = data
 
         // roles must be a non-empty array
         if (!roles || roles.length <= 0) {
@@ -69,6 +94,8 @@ const actions = {
         commit('SET_NAME', name)
         commit('SET_AVATAR', avatar)
         commit('SET_INTRODUCTION', introduction)
+        commit('SET_LEVEL', level)
+        commit('SET_LASTTIME', lastTime)
         resolve(data)
       }).catch(error => {
         reject(error)

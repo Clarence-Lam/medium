@@ -18,5 +18,7 @@ router
   .post('/applyUrl', orderController.applyUrl)
   .post('/addUrl', orderController.addUrl)
 
+  .post('/toggleCollection', orderController.toggleCollection)
+
 module.exports = router
 

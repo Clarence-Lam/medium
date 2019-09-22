@@ -17,11 +17,15 @@
           <div class="order-detail">
             <div>
               <p class="detail-title">订单编号：</p>
-              <span>{{ order.id }}</span>
+              <span v-if="order.id">{{ (order.id).replace(/-/g, '') }}</span>
             </div>
             <div>
               <p class="detail-title">状态：</p>
-              <span>{{ returnState(order.state) }}</span>
+              <span :style="order.state==='complaining'?'color:red':''">{{ returnState(order.state) }}</span>
+            </div>
+            <div>
+              <p v-if="order.refuse_reason" class="detail-title">拒绝理由：</p>
+              <span>{{ order.refuse_reason }}</span>
             </div>
             <div>
               <p class="detail-title">文章标题：</p>
@@ -69,7 +73,7 @@
       <el-col v-if="order.sign === 'copy_write'" :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
         <el-card class="box-card">
           <div slot="header" class="clearfix">
-            <span>所属案例</span>
+            <span>所属产品</span>
           </div>
           <div class="case-content">
             <el-table
@@ -94,7 +98,11 @@
               </el-table-column>
               <el-table-column v-for="item in tableLable" :key="item.key" :label="item.title" :prop="item.key" align="center">
                 <template slot-scope="scope">
-                  <span>{{ scope.row[item.key] }}</span>
+                  <span v-if="item.key==='agent_price'">{{ $store.state.user.level === '1' ? '代理可看': scope.row[item.key] }}</span>
+                  <div v-else-if="item.key==='baidu'">
+                    <img :src="getImgUrl(scope.row[item.key])" alt="权重" class="baidu">
+                  </div>
+                  <span v-else>{{ scope.row[item.key] }}</span>
                 </template>
               </el-table-column>
             </el-table>
@@ -102,7 +110,7 @@
         </el-card>
       </el-col>
       <el-col
-        v-if="order.state==='start'||order.state==='plan'||order.state==='working'||order.state==='uphold'"
+        v-if="order.state==='start'||order.state==='plan'||order.state==='working'||order.state==='uphold'||order.state==='complaining'"
         :xs="24"
         :sm="24"
         :md="12"
@@ -115,20 +123,30 @@
           </div>
           <div class="blog-content">
             <div
-              v-if="order.state==='working' && verifyRole('technology')"
+              v-if="(order.state==='working' ) && verifyRole('technology')"
               style="margin:20px"
             >
-              <template v-for="count in order.num">
+              <!-- <template v-for="count in order.num">
                 <div :key="count" style="margin:5px">
                   链接{{ count }}：<el-input v-model="urlData['url'+count]" style="width: 80%;" />
                 </div>
-              </template>
+              </template> -->
+              <el-form label-width="80px">
+                <el-form-item label="链接：">
+                  <el-input
+                    v-model="urlData"
+                    type="textarea"
+                    placeholder="请输入链接。一行表示一条链接，链接名称与链接地址用“,”隔开，例如“百度,http://www.baidu.com”"
+                    :autosize="{ minRows: 2}"
+                  />
+                </el-form-item>
+              </el-form>
 
             </div>
             <!-- <div
               v-if="order.state==='uphold' && verifyRole('technology')"
               style="margin:20px"
-            >补档链接：<el-input v-model="supplyUrl" style="width: 80%;" />
+            >补单链接：<el-input v-model="supplyUrl" style="width: 80%;" />
             </div> -->
             <div style="margin:20px">
               <el-button v-if="order.state==='start' && verifyRole('service')" type="success" @click="handle('plan')">通过</el-button>
@@ -136,13 +154,30 @@
               <el-button v-if="order.state==='plan' && verifyRole('technology')" type="primary" @click="handle('working')">操作</el-button>
               <el-button v-if="(order.state==='working'||order.state==='uphold') && verifyRole('technology')" type="warning" @click="handle('stop')">合作停</el-button>
               <el-button v-if="(order.state==='working') && verifyRole('technology')" type="success" @click="handle('complete')">完成</el-button>
-              <el-button v-if="(order.state==='uphold') && verifyRole('technology')" type="primary" @click="toAddUrl()">补档</el-button>
+              <el-button v-if="((order.state==='uphold') || (order.state==='complaining')) && verifyRole('technology')" type="primary" @click="toAddUrl()">补单</el-button>
+              <el-button v-if="((order.state==='uphold') || (order.state==='complaining')) && verifyRole('service')" type="primary" @click="toAddUrl()">查看订单报表</el-button>
               <el-button v-if="(order.state==='uphold') && verifyRole('technology')" type="success" @click="handle('finish')">完成</el-button>
             </div>
           </div>
         </el-card>
       </el-col>
     </el-row>
+
+    <el-dialog title="拒绝理由" :visible.sync="rejectVisible" width="30%">
+      <el-form>
+        <el-form-item>
+          <el-input
+            v-model="refuse_reason"
+            type="textarea"
+            :rows="2"
+          />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="rejectVisible = false">取 消</el-button>
+        <el-button type="primary" @click="submitReject">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -169,6 +204,27 @@ const tableLable = {
       title: '备注',
       key: 'mark'
     }
+  ],
+  medium: [
+    {
+      title: '平台',
+      key: 'platform'
+    }, {
+      title: '代理价格',
+      key: 'agent_price'
+    }, {
+      title: '普通用户价格',
+      key: 'general_price'
+    }, {
+      title: '百度权重',
+      key: 'baidu'
+    }, {
+      title: '参考粉丝数',
+      key: 'fens_num'
+    }, {
+      title: '备注',
+      key: 'mark'
+    }
   ]
 }
 
@@ -180,8 +236,10 @@ export default {
       tableData: [],
       url: '',
       supplyUrl: '',
-      urlData: {},
-      fullscreenLoading: false
+      urlData: '',
+      fullscreenLoading: false,
+      rejectVisible: false,
+      refuse_reason: ''
     }
   },
   created() {
@@ -196,7 +254,8 @@ export default {
         stop: '合作停',
         finish: '已完成',
         uphold: '维护中',
-        reject: '已拒绝'
+        reject: '已拒绝',
+        complaining: '投诉中'
       }
       return state[value]
     },
@@ -232,10 +291,6 @@ export default {
           this.order = res.data
           this.tableLable = tableLable[res.data.dept]
           this.tableData = JSON.parse(res.data.case_id_json)
-          const num = res.data.num
-          for (let i = 0; i < num; i++) {
-            this.$set(this.urlData, 'url' + i, '')
-          }
         })
       } else {
         this.$router.push(
@@ -259,17 +314,7 @@ export default {
           }
         })
       } else if (val === 'reject') {
-        // 改变状态、回退金额
-        const params = {
-          id: this.order.id,
-          state: val
-        }
-        this.fullscreenLoading = true
-        failState(params).then(res => {
-          if (res.status === 200) {
-            this.success()
-          }
-        })
+        this.rejectVisible = true
       } else if (val === 'complete') {
         this.verifyUrl()
       } else if (val === 'finish') {
@@ -287,41 +332,57 @@ export default {
       }
     },
     verifyUrl() {
+      const urlData = this.urlData.replace(new RegExp('\n', 'g'), ';')
+      const urlArr = urlData.split(';')
       const arr = []
-      let verify = true
       var regu = /^(?:http(s)?:\/\/)?[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\*\+,;=.]+$/
       var re = new RegExp(regu)
-      for (const item in this.urlData) {
-        if (this.urlData[item] !== '') {
-          if (re.test(this.urlData[item])) {
-            arr.push(this.urlData[item])
+      if (urlData !== '') {
+        for (let i = 0; i < urlArr.length; i++) {
+          const nameAndUrl = urlArr[i].split(',')
+          if (nameAndUrl.length === 2) {
+            const name = nameAndUrl[0]
+            const url = nameAndUrl[1]
+            if (re.test(url)) {
+              arr.push({
+                name,
+                url
+              })
+            } else {
+              this.$message({
+                message: `请检查第${i + 1}行，“${url}”的格式是否正确1`,
+                type: 'warning'
+              })
+              return
+            }
           } else {
-            verify = false
-            const i = item.split('url')
             this.$message({
-              message: `请检查链接${i[1]}的地址是否正确`,
+              message: `请检查第${i + 1}行，“${urlArr[i]}”的格式是否正确2`,
               type: 'warning'
             })
+            return
           }
         }
-      }
-      if (arr.length > 0) {
-        const params = {
-          id: this.order.id,
-          urlArr: arr
-        }
-        this.fullscreenLoading = true
-        submitOrder(params).then(res => {
-          if (res.status === 200) {
-            this.success()
-          }
-        })
-      } else if (verify) {
+      } else {
         this.$message({
           message: `请填写链接地址`,
           type: 'warning'
         })
+        return
       }
+      this.submitOrder(arr)
+    },
+    submitOrder(arr) {
+      const params = {
+        id: this.order.id,
+        urlArr: arr
+      }
+      this.fullscreenLoading = true
+      submitOrder(params).then(res => {
+        if (res.status === 200) {
+          this.success()
+        }
+      })
     },
     success() {
       this.fullscreenLoading = false
@@ -344,6 +405,31 @@ export default {
           }
         }
       )
+    },
+    submitReject() {
+      const reason = this.refuse_reason
+      if (reason !== '') {
+        // // 改变状态、回退金额
+        const params = {
+          id: this.order.id,
+          state: 'reject',
+          refuse_reason: reason
+        }
+        this.fullscreenLoading = true
+        failState(params).then(res => {
+          if (res.status === 200) {
+            this.success()
+          }
+        })
+      } else {
+        this.$message({
+          message: '请输入拒绝理由',
+          type: 'warning'
+        })
+      }
+    },
+    getImgUrl(i) {
+      return require('@/assets/images/baidu' + i + '.png')
     }
   }
 }
@@ -355,6 +441,9 @@ export default {
 .detail-title{
     display: inline-block;
     margin: 10px;
+}
+.baidu{
+    width:75%;
 }
 </style>
 <style>

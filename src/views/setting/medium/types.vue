@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <h3 style="padding-left: 20px;">媒体推广配置</h3>
-    <TypeName :types-name="typesName" />
+    <TypeName :types-name="typesName" :dept="'medium'" />
   </div>
 </template>
 <script>

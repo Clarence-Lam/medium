@@ -45,7 +45,7 @@
               ref="password"
               v-model="loginForm.password"
               :type="passwordType"
-              placeholder="Password"
+              placeholder="请输入密码"
               name="password"
               tabindex="2"
               auto-complete="on"
@@ -93,8 +93,8 @@ export default {
     }
     return {
       loginForm: {
-        phone: '13510520707',
-        password: '123456'
+        phone: '',
+        password: ''
       },
       loginRules: {
         phone: [{ required: true, trigger: 'blur', validator: validatePhone }],
@@ -134,9 +134,9 @@ export default {
           this.$store.dispatch('user/login', this.loginForm).then((res) => {
             console.log(res)
             if (res.role === 'customer') {
-              this.$router.push({ path: this.redirect || '/' })
+              this.$router.push({ path: '/home/home' })
             } else {
-              this.$router.push({ path: this.redirect || '/order/controller' })
+              this.$router.push({ path: '/order/controller' })
             }
             this.loading = false
           }).catch((msg) => {

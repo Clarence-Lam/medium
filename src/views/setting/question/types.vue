@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <h3 style="padding-left: 20px;">问答推广配置</h3>
-    <TypeName :types-name="typesName" />
+    <TypeName :types-name="typesName" :dept="'question'" />
   </div>
 </template>
 <script>

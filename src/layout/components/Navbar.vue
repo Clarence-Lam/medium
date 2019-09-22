@@ -6,11 +6,11 @@
 
     <div class="right-menu">
       <template v-if="device!=='mobile'">
-        <search id="header-search" class="right-menu-item" />
+        <!-- <search id="header-search" class="right-menu-item" /> -->
 
-        <error-log class="errLog-container right-menu-item hover-effect" />
+        <!-- <error-log class="errLog-container right-menu-item hover-effect" /> -->
 
-        <screenfull id="screenfull" class="right-menu-item hover-effect" />
+        <!-- <screenfull id="screenfull" class="right-menu-item hover-effect" /> -->
 
         <!-- <el-tooltip content="Global Size" effect="dark" placement="bottom">
           <size-select id="size-select" class="right-menu-item hover-effect" />
@@ -18,7 +18,7 @@
 
       </template>
 
-      <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="click">
+      <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="click" @command="handleCommand">
         <div class="avatar-wrapper">
           <span>{{ this.$store.state.user.name }}</span>
           <i class="el-icon-caret-bottom" />
@@ -27,12 +27,12 @@
           <!-- <router-link to="/profile/index">
             <el-dropdown-item>Profile</el-dropdown-item>
           </router-link> -->
-          <router-link to="/">
-            <el-dropdown-item>个人中心</el-dropdown-item>
-          </router-link>
-          <router-link to="/">
-            <el-dropdown-item>稿件提醒</el-dropdown-item>
-          </router-link>
+          <!-- <router-link to="/"> -->
+          <el-dropdown-item command="show">个人资料</el-dropdown-item>
+          <!-- </router-link> -->
+          <!-- <router-link to="/"> -->
+          <el-dropdown-item command="change">修改密码</el-dropdown-item>
+          <!-- </router-link> -->
           <!-- <a target="_blank" href="https://github.com/PanJiaChen/vue-element-admin/">
             <el-dropdown-item>Github</el-dropdown-item>
           </a>
@@ -45,6 +45,45 @@
         </el-dropdown-menu>
       </el-dropdown>
     </div>
+    <el-dialog title="个人资料" :visible.sync="personal" :modal-append-to-body="false" width="30%">
+      <el-form :model="form">
+        <el-form-item label="真实姓名" :label-width="'120px'">
+          <el-input v-model="form.name" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="手机" :label-width="'120px'">
+          <el-input v-model="form.phone" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="邮箱" :label-width="'120px'">
+          <el-input v-model="form.elmail" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="QQ" :label-width="'120px'">
+          <el-input v-model="form.qq" autocomplete="off" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="personal = false">取 消</el-button>
+        <el-button type="primary" @click="submit">确 定</el-button>
+      </div>
+    </el-dialog>
+
+    <el-drawer
+      title="修改密码"
+      :visible.sync="drawer"
+      :direction="'rtl'"
+    >
+      <el-form :model="passForm">
+        <el-form-item label="原密码" :label-width="'120px'">
+          <el-input v-model="passForm.oldPass" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="新密码" :label-width="'120px'">
+          <el-input v-model="passForm.newPass" autocomplete="off" />
+        </el-form-item>
+        <el-form-item label="确认密码" :label-width="'120px'">
+          <el-input v-model="passForm.pass" autocomplete="off" />
+        </el-form-item>
+      </el-form>
+      <el-button type="primary" @click="submit">确定</el-button>
+    </el-drawer>
   </div>
 </template>
 
@@ -52,19 +91,36 @@
 import { mapGetters } from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
-import ErrorLog from '@/components/ErrorLog'
-import Screenfull from '@/components/Screenfull'
+// import ErrorLog from '@/components/ErrorLog'
+// import Screenfull from '@/components/Screenfull'
 // import SizeSelect from '@/components/SizeSelect'
-import Search from '@/components/HeaderSearch'
+// import Search from '@/components/HeaderSearch'
 
 export default {
   components: {
     Breadcrumb,
-    Hamburger,
-    ErrorLog,
-    Screenfull,
+    Hamburger
+    // ErrorLog,
+    // Screenfull,
     // SizeSelect,
-    Search
+    // Search
+  },
+  data() {
+    return {
+      form: {
+        name: '',
+        phone: '',
+        elmail: '',
+        qq: ''
+      },
+      passForm: {
+        oldPass: '',
+        newPass: '',
+        pass: ''
+      },
+      personal: false,
+      drawer: false
+    }
   },
   computed: {
     ...mapGetters([
@@ -73,13 +129,34 @@ export default {
       'device'
     ])
   },
+
   methods: {
     toggleSideBar() {
       this.$store.dispatch('app/toggleSideBar')
     },
     async logout() {
+      const role = this.$store.state.user.roles[0]
       await this.$store.dispatch('user/logout')
-      this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+      if (role === 'customer') {
+        this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+      } else {
+        this.$router.push(`/adminLogin?redirect=${this.$route.fullPath}`)
+      }
+    },
+    handleCommand(command) {
+      if (command === 'show') {
+        this.personal = true
+      } else if (command === 'change') {
+        this.drawer = true
+      }
+    },
+    submit() {
+      this.$notify.error({
+        title: '信息',
+        message: '功能待完善'
+      })
+      this.personal = false
+      this.drawer = false
     }
   }
 }
@@ -90,7 +167,7 @@ export default {
   height: 50px;
   overflow: hidden;
   position: relative;
-  background: #fff;
+  background: rgb(27,28,35);
   box-shadow: 0 1px 4px rgba(0,21,41,.08);
 
   .hamburger-container {

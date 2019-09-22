@@ -7,7 +7,7 @@
             <el-form-item :label="item.name+':'">
               <el-radio-group v-model="caseForm[item.id]" size="small">
                 <el-radio :label="null" :border="true">不限</el-radio>
-                <el-radio v-for="radio in types[item.id]" :key="radio.id" :label="radio.id" :border="true">{{ radio.name }}</el-radio>
+                <el-radio v-for="radio in types[item.id]" :key="radio.id" class="commit-radio" :label="radio.id" :border="true">{{ radio.name }}</el-radio>
               </el-radio-group>
             </el-form-item>
           </div>
@@ -102,5 +102,8 @@ export default {
 <style lang="scss" scoped>
 /deep/.el-radio__input {
     display: none
+}
+/deep/.commit-radio{
+    margin-top: 10px
 }
 </style>

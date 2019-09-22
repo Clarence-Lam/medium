@@ -95,3 +95,11 @@ export function addUrl(data) {
     data
   })
 }
+
+export function toggleCollection(data) {
+  return request({
+    url: '/order/toggleCollection',
+    method: 'post',
+    data
+  })
+}

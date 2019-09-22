@@ -56,6 +56,11 @@ export const constantRoutes = [
     hidden: true
   },
   {
+    path: '/adminLogin',
+    component: () => import('@/views/login/adminLogin'),
+    hidden: true
+  },
+  {
     path: '/register',
     component: () => import('@/views/login/register'),
     hidden: true
@@ -75,55 +80,40 @@ export const constantRoutes = [
     component: () => import('@/views/error-page/401'),
     hidden: true
   },
-  // {
-  //   path: '/',
-  //   component: Layout,
-  //   redirect: '/dashboard',
-  //   children: [
-  //     {
-  //       path: 'dashboard',
-  //       component: () => import('@/views/dashboard/index'),
-  //       name: 'Dashboard',
-  //       meta: { title: 'Dashboard', icon: 'dashboard', affix: true }
-  //     }
-  //   ]
-  // },
+  {
+    path: '/',
+    component: Layout,
+    redirect: '/entrance',
+    hidden: true,
+    children: [
+      {
+        path: 'entrance',
+        component: () => import('@/views/entrance.vue'),
+        name: 'entrance',
+        meta: { title: 'entrance', icon: 'dashboard', affix: true }
+      }
+    ]
+  },
 
   {
     path: '/watch-platform',
     component: Layout,
     // redirect: '/article/publish1',
-    name: '问答推广',
+    name: '平台推广',
     hidden: true,
     showTop: true,
-    meta: { title: '问答推广', icon: 'example' },
+    meta: { title: '平台推广', icon: 'example' },
     children: [
       {
         path: 'platform',
-        name: '全部问答平台',
-        component: () => import('@/views/article/watch/platform'),
-        meta: { title: '全部问答平台', icon: 'table' }
-      }
-    ]
-  },
-  {
-    path: '/test1',
-    component: Layout,
-    name: '平台推广',
-    meta: { title: '平台推广', icon: 'example' },
-    hidden: true,
-    showTop: true,
-    children: [
-      {
-        path: 'index',
         name: '平台推广',
-        component: () => import('@/views/home/index'),
-        meta: { title: '平台推广', icon: 'form' }
+        component: () => import('@/views/article/watch/platform'),
+        meta: { title: '平台推广', icon: 'table' }
       }
     ]
   },
   {
-    path: '/test2',
+    path: '/watch-medium',
     component: Layout,
     name: '媒体推广',
     meta: { title: '媒体推广', icon: 'example' },
@@ -133,13 +123,29 @@ export const constantRoutes = [
       {
         path: 'index',
         name: '媒体推广',
-        component: () => import('@/views/home/index'),
+        component: () => import('@/views/article/watch/medium'),
         meta: { title: '媒体推广', icon: 'form' }
       }
     ]
   },
   {
-    path: '/test3',
+    path: '/watch-question',
+    component: Layout,
+    name: '问答推广',
+    meta: { title: '问答推广', icon: 'example' },
+    hidden: true,
+    showTop: true,
+    children: [
+      {
+        path: 'index',
+        name: '问答推广',
+        component: () => import('@/views/article/watch/question'),
+        meta: { title: '问答推广', icon: 'form' }
+      }
+    ]
+  },
+  {
+    path: '/gohome',
     component: Layout,
     name: '返回用户主页',
     meta: { title: '返回用户主页', icon: 'example' },
@@ -149,7 +155,7 @@ export const constantRoutes = [
       {
         path: 'index',
         name: '返回用户主页',
-        component: () => import('@/views/home/index'),
+        component: () => import('@/views/entrance.vue'),
         meta: { title: '返回用户主页', icon: 'form' }
       }
     ]
@@ -208,15 +214,15 @@ export const constantRoutes = [
  */
 export const asyncRoutes = [
   {
-    path: '/',
+    path: '/home',
     component: Layout,
     redirect: '/home',
-    // meta: { title: '用户主页', icon: 'example', roles: ['customer'] },
+    meta: { title: '用户主页', icon: 'example', roles: ['customer'] },
     children: [{
       path: 'home',
       name: 'home',
       component: () => import('@/views/home/index'),
-      meta: { title: '用户主页', icon: 'dashboard' }
+      meta: { title: '用户主页', icon: 'home' }
     }]
   },
   {
@@ -224,7 +230,7 @@ export const asyncRoutes = [
     component: Layout,
     redirect: '/user/pay',
     name: 'user',
-    meta: { title: '个人中心', icon: 'example', roles: ['customer'] },
+    meta: { title: '个人中心', icon: 'money', roles: ['customer'] },
     children: [
       {
         path: 'pay',
@@ -269,7 +275,7 @@ export const asyncRoutes = [
     component: Layout,
     redirect: '/article/publish',
     name: 'article',
-    meta: { title: '文章管理', icon: 'example', roles: ['customer'] },
+    meta: { title: '文章管理', icon: 'form', roles: ['customer'] },
     children: [
       {
         path: 'publish',
@@ -302,6 +308,18 @@ export const asyncRoutes = [
         component: () => import('@/views/article/platform/copy-write'),
         meta: { title: '已有文案直接发布', icon: 'tree' }
       }, {
+        path: 'copy-write-medium',
+        name: 'copy-write-medium',
+        hidden: true,
+        component: () => import('@/views/article/medium/copy-write'),
+        meta: { title: '已有文案直接发布', icon: 'tree' }
+      }, {
+        path: 'copy-write-question',
+        name: 'copy-write-question',
+        hidden: true,
+        component: () => import('@/views/article/question/copy-write'),
+        meta: { title: '已有文案直接发布', icon: 'tree' }
+      }, {
         path: 'commit',
         name: 'commit',
         hidden: true,
@@ -320,7 +338,7 @@ export const asyncRoutes = [
         path: 'my',
         name: 'my',
         component: () => import('@/views/order/myOrder/index'),
-        meta: { title: '我的订单', icon: 'form', roles: ['customer'] }
+        meta: { title: '我的订单', icon: 'order', roles: ['customer'] }
       },
       {
         path: 'myOrderDetail',
@@ -333,7 +351,7 @@ export const asyncRoutes = [
         path: 'addMyUrl',
         component: () => import('@/views/order/myOrder/addMyUrl'),
         name: 'addMyUrl',
-        meta: { title: '补档' },
+        meta: { title: '补单' },
         hidden: true
       }
     ]
@@ -348,7 +366,7 @@ export const asyncRoutes = [
         path: 'controller',
         name: 'controller',
         component: () => import('@/views/order/controller/index'),
-        meta: { title: '订单管理', icon: 'form', roles: ['admin', 'service', 'technology'] }
+        meta: { title: '订单管理', icon: 'documentation', roles: ['admin', 'service', 'technology'] }
       },
       {
         path: 'handle',
@@ -361,7 +379,7 @@ export const asyncRoutes = [
         path: 'addUrl',
         component: () => import('@/views/order/controller/addUrl'),
         name: 'addUrl',
-        meta: { title: '补档' },
+        meta: { title: '补单' },
         hidden: true
       }
     ]
@@ -374,7 +392,7 @@ export const asyncRoutes = [
     meta: {
       title: '设置',
       icon: 'nested',
-      roles: ['admin', 'technology']
+      roles: ['admin', 'technology', 'service']
     },
     children: [
       {
@@ -383,6 +401,22 @@ export const asyncRoutes = [
         meta: {
           title: '用户管理',
           roles: ['admin']
+        }
+      },
+      {
+        path: 'public',
+        component: () => import('@/views/setting/public/index'),
+        meta: {
+          title: '公告管理',
+          roles: ['admin', 'technology']
+        }
+      },
+      {
+        path: 'customer',
+        component: () => import('@/views/setting/customer/index'),
+        meta: {
+          title: '客户管理',
+          roles: ['admin', 'service']
         }
       },
       {
@@ -408,13 +442,13 @@ export const asyncRoutes = [
             path: 'platform-cases',
             component: () => import('@/views/setting/platform/cases'),
             name: 'platform-cases',
-            meta: { title: '案例管理', roles: ['admin', 'technology'] }
+            meta: { title: '产品管理', roles: ['admin', 'technology'] }
           },
           {
             path: 'platform-caseForm',
             component: () => import('@/views/setting/platform/caseForm'),
             name: 'platform-caseForm',
-            meta: { title: '案例管理', roles: ['admin', 'technology'] },
+            meta: { title: '产品管理', roles: ['admin', 'technology'] },
             hidden: true
           },
           {
@@ -440,9 +474,16 @@ export const asyncRoutes = [
           },
           {
             path: 'medium-cases',
-            component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
+            component: () => import('@/views/setting/medium/cases'),
             name: 'medium-cases',
-            meta: { title: '案例管理', roles: ['admin', 'technology'] }
+            meta: { title: '产品管理', roles: ['admin', 'technology'] }
+          },
+          {
+            path: 'medium-caseForm',
+            component: () => import('@/views/setting/medium/caseForm'),
+            name: 'medium-caseForm',
+            meta: { title: '产品管理', roles: ['admin', 'technology'] },
+            hidden: true
           },
           {
             path: 'medium-nothing',
@@ -467,9 +508,16 @@ export const asyncRoutes = [
           },
           {
             path: 'question-cases',
-            component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
+            component: () => import('@/views/setting/question/cases'),
             name: 'question-cases',
-            meta: { title: '案例管理', roles: ['admin', 'technology'] }
+            meta: { title: '产品管理', roles: ['admin', 'technology'] }
+          },
+          {
+            path: 'question-caseForm',
+            component: () => import('@/views/setting/question/caseForm'),
+            name: 'question-caseForm',
+            meta: { title: '产品管理', roles: ['admin', 'technology'] },
+            hidden: true
           },
           {
             path: 'question-nothing',

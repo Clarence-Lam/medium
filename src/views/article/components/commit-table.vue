@@ -26,12 +26,23 @@
       </el-table-column>
       <el-table-column v-for="item in tableLable" :key="item.key" :label="item.title" :prop="item.key" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row[item.key] }}</span>
+          <div v-if="item.key==='baidu'">
+            <img :src="getImgUrl(scope.row[item.key])" alt="权重" class="baidu">
+          </div>
+          <span v-else-if="item.key==='agent_price'">
+            {{ $store.state.user.level === '1' ? '代理可看': scope.row[item.key] }}
+          </span>
+          <span v-else>{{ scope.row[item.key] }}</span>
         </template>
       </el-table-column>
       <el-table-column label="数量" width="80" prop="num" align="center">
         <template slot-scope="scope">
           <el-input v-model.number="scope.row.num" type="number" placeholder="数量" @blur="blurNum(scope.row)" />
+        </template>
+      </el-table-column>
+      <el-table-column label="收藏" width="80" prop="collection" align="center">
+        <template slot-scope="scope">
+          <img :src="getCollectionImg(scope.row.is_collection)" alt="收藏" style="width:45%" @click="toggleCollection(scope.row)">
         </template>
       </el-table-column>
       <!--
@@ -52,7 +63,7 @@
   </div>
 </template>
 <script>
-import { getCommitTable } from '@/api/orders'
+import { getCommitTable, toggleCollection } from '@/api/orders'
 import Pagination from '@/components/Pagination'
 
 const tableLable = {
@@ -60,6 +71,52 @@ const tableLable = {
     {
       title: '平台',
       key: 'platform'
+    }, {
+      title: '代理价格',
+      key: 'agent_price'
+    }, {
+      title: '普通用户价格',
+      key: 'general_price'
+    }, {
+      title: '百度权重',
+      key: 'baidu'
+    }, {
+      title: '起始下单量',
+      key: 'start_num'
+    }, {
+      title: '备注',
+      key: 'mark'
+    }
+  ],
+  medium: [
+    {
+      title: '平台',
+      key: 'platform'
+    }, {
+      title: '代理价格',
+      key: 'agent_price'
+    }, {
+      title: '普通用户价格',
+      key: 'general_price'
+    }, {
+      title: '百度权重',
+      key: 'baidu'
+    }, {
+      title: '参考粉丝数',
+      key: 'fens_num'
+    }, {
+      title: '备注',
+      key: 'mark'
+    }
+  ],
+  question: [
+    {
+      title: '平台',
+      key: 'platform'
+    },
+    {
+      title: '一问几答',
+      key: 'yiwenjida'
     }, {
       title: '代理价格',
       key: 'agent_price'
@@ -171,6 +228,17 @@ export default {
         })
         row.num = row.start_num
       }
+    },
+    getImgUrl(i) {
+      return require('@/assets/images/baidu' + i + '.png')
+    },
+    getCollectionImg(scope) {
+      return scope ? require('@/assets/images/collection_true.png') : require('@/assets/images/collection_false.png')
+    },
+    toggleCollection(row) {
+      toggleCollection({ case_id: row.id, collection: !row.is_collection }).then(res => {
+        this.getList()
+      })
     }
   }
 
@@ -183,5 +251,8 @@ input::-webkit-inner-spin-button {
 }
 input[type="number"]{
   -moz-appearance: textfield;
+}
+.baidu{
+    width:45%;
 }
 </style>

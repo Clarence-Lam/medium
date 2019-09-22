@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="box-container" :style="{width:width+'px',height:height+'px'}">
+    <div class="box-container" :style="{width:'100%',height:height+'px'}">
       <div class="tag-box" :style="{height:height/1.5+'px'}">
         <template v-for="item of multipleSelection">
           <CommitTag :key="item.id" :item="item" />

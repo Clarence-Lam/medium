@@ -11,9 +11,13 @@ router
   .del('/user/del/:id', settingController.delUser)
 
   .get('/getTypesNameList', settingController.getTypesNameList)
+  .get('/getExpectedTime', settingController.getExpectedTime)
   .get('/getTypesContent', settingController.getTypesContent)
   .del('/delTag/del/:id', settingController.delTag)
   .post('/addTypesContent', settingController.addTypesContent)
+  .post('/addExpectedTime', settingController.addExpectedTime)
+  .del('/delExpectedTime/:id', settingController.delExpectedTime)
+  .post('/changeDefault', settingController.changeDefault)
 
   .get('/getNothing', settingController.getNothing)
   .post('/addNothing', settingController.addNothing)
@@ -25,6 +29,12 @@ router
   .post('/createCase', settingController.createCase)
   .post('/updateCase', settingController.updateCase)
   .del('/deleteCase/:id', settingController.deleteCase)
+
+  .get('/getLastPublic', settingController.getLastPublic)
+  .post('/addPublic', settingController.addPublic)
+
+  .get('/getCustomer', settingController.getCustomer)
+  .post('/updateCust', settingController.updateCust)
 
 module.exports = router
 

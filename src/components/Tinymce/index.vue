@@ -103,16 +103,23 @@ export default {
   },
   methods: {
     init() {
+      const loading = this.$loading({
+        lock: true,
+        text: 'Loading',
+        spinner: 'el-icon-loading',
+        background: 'rgba(0, 0, 0, 0.7)'
+      })
       // dynamic load tinymce from cdn
       load(tinymceCDN, (err) => {
         if (err) {
+          loading.close()
           this.$message.error(err.message)
           return
         }
-        this.initTinymce()
+        this.initTinymce(loading)
       })
     },
-    initTinymce() {
+    initTinymce(loading) {
       const _this = this
       window.tinymce.init({
         selector: `#${this.tinymceId}`,
@@ -182,6 +189,7 @@ export default {
         //   });
         // },
       })
+      loading.close()
     },
     destroyTinymce() {
       const tinymce = window.tinymce.get(this.tinymceId)

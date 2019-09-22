@@ -72,6 +72,9 @@ class OrderController {
         inArr.push(search[item])
       }
     }
+
+    const collection = await DBHelper.getList('collection', [0, 1000], { customer_id: ctx.session.userId })
+
     if (inArr.length > 0) {
       const arr = []
       for (const item of inArr) {
@@ -99,7 +102,20 @@ class OrderController {
         }
         return Promise.all(
           [
-            Orders.getOrderCases('article_cases', limit, params, inStr, orderBy),
+            Orders.getOrderCases('article_cases', limit, params, inStr, orderBy).then(result => {
+              const res = []
+              for (const item in result) {
+                const obj = result[item]
+                obj['is_collection'] = false
+                for (const val of collection) {
+                  if (val.case_id === result[item].id) {
+                    obj['is_collection'] = true
+                  }
+                }
+                res.push(obj)
+              }
+              return res
+            }),
             Orders.getOrderCasesTotal('article_cases', params, inStr, orderBy)
           ]).then(result => {
           ctx.body = {
@@ -120,7 +136,20 @@ class OrderController {
     } else {
       return Promise.all(
         [
-          DBHelper.getList('article_cases', limit, { dept }),
+          DBHelper.getList('article_cases', limit, { dept }).then(result => {
+            const res = []
+            for (const item in result) {
+              const obj = result[item]
+              obj['is_collection'] = false
+              for (const val of collection) {
+                if (val.case_id === result[item].id) {
+                  obj['is_collection'] = true
+                }
+              }
+              res.push(obj)
+            }
+            return res
+          }),
           DBHelper.getListTotal('article_cases', { dept })
         ]).then(result => {
         ctx.body = {
@@ -135,13 +164,13 @@ class OrderController {
   // 后台人员查询订单
   async getOrderTable(ctx) {
     // ctx.session.role = 'technology'
-    const { search } = ctx.query
-    const params = { ...search }
+    const { request_state } = ctx.query
+    const params = { state: request_state }
     const pageNum = parseInt(ctx.query.page || 1, 10)// 页码
     const end = 10 // 默认页数
     const start = (pageNum - 1) * end
     const limit = [start, end]
-
+    console.log(params)
     const userRole = ctx.session.role
     let state = null
     if (userRole === 'admin' || userRole === 'service') {
@@ -197,11 +226,14 @@ class OrderController {
   }
 
   async failState(ctx) {
-    const { id, state } = ctx.request.body
+    const { id, state, refuse_reason } = ctx.request.body
     const params = {
       state,
       updated_by: ctx.session.userName,
       updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
+    }
+    if (refuse_reason) {
+      params['refuse_reason'] = refuse_reason
     }
     await DBHelper.updateRow('orders', id, params).then(result => {
       // TODO 恢复金额
@@ -258,7 +290,8 @@ class OrderController {
                 id: uuidv1(),
                 order_id: id,
                 order_name: res[0].title,
-                url: item,
+                name: item.name,
+                url: item.url,
                 created_by: ctx.session.userName,
                 created_time: moment().format('YYYY-MM-DD HH:mm:ss')
               }
@@ -286,7 +319,7 @@ class OrderController {
     const end = 10 // 默认页数
     const start = (pageNum - 1) * end
     const limit = [start, end]
-
+    console.log(ctx.session.userId)
     params['customer_id'] = ctx.session.userId
     return Promise.all(
       [
@@ -314,16 +347,23 @@ class OrderController {
   }
 
   async applyUrl(ctx) {
-    const { id, order_id } = ctx.request.body
+    const { id, order_id, reason } = ctx.request.body
+    const urlParams = {
+      is_add: '1',
+      reason,
+      updated_by: ctx.session.userName,
+      updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
+    }
     const params = {
       is_add: '1',
       updated_by: ctx.session.userName,
-      updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
+      updated_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+      state: 'complaining'
     }
     return Promise.all(
       [
         DBHelper.updateRow('orders', order_id, params),
-        DBHelper.updateRow('order_url', id, params)
+        DBHelper.updateRow('order_url', id, urlParams)
       ]).then(result => {
       ctx.body = {
         status: 200,
@@ -364,6 +404,34 @@ class OrderController {
         }
       })
     })
+  }
+
+  async toggleCollection(ctx) {
+    const { case_id, collection } = ctx.request.body
+    if (collection) {
+      const params = {
+        id: uuidv1(),
+        customer_id: ctx.session.userId,
+        case_id,
+        created_by: ctx.session.userName,
+        created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+      }
+      return DBHelper.addRow('collection', params).then(() => {
+        ctx.body = {
+          status: 200,
+          statusText: 'ok',
+          mag: '收藏成功'
+        }
+      })
+    } else {
+      return Orders.delCollectionByCaseId(case_id, ctx.session.userId).then(() => {
+        ctx.body = {
+          status: 200,
+          statusText: 'ok',
+          mag: '取消收藏'
+        }
+      })
+    }
   }
 }
 

@@ -47,12 +47,12 @@
       </el-table-column>
       <el-table-column label="操作" align="center" width="230" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
-          <el-button type="primary" size="mini" @click="showDetail(row)">
-            查看
+          <el-button type="primary" size="small" @click="showDetail(row)">
+            订单详情
           </el-button>
-          <!-- <el-button size="mini" :disabled="row.role==='admin'" type="danger" @click="handleModifyStatus(row,'deleted')">
-            删除
-          </el-button> -->
+          <el-button size="small" :disabled="row.role==='admin'" type="success" @click="showUrl(row)">
+            订单报表
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -92,12 +92,14 @@ export default {
         stop: '合作停',
         finish: '已完成',
         uphold: '维护中',
-        reject: '已拒绝'
+        reject: '已拒绝',
+        complaining: '投诉中'
       }
       return state[value]
     },
     cutID(value) {
-      return value.split('-')[0]
+    //   return value.split('-')[0]
+      return value.replace(/-/g, '')
     },
     getData() {
       this.loading = true
@@ -115,6 +117,17 @@ export default {
           name: 'myOrderDetail',
           params: {
             id: row.id
+          }
+        }
+      )
+    },
+    showUrl(row) {
+      this.$router.push(
+        {
+          name: 'addMyUrl',
+          params: {
+            id: row.id,
+            disable: row.state === 'finish'
           }
         }
       )

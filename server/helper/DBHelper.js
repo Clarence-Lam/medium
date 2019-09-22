@@ -63,3 +63,12 @@ exports.getListInRow = (table, limit, value, inArr) => {
   const sql = `SELECT*FROM ${table} WHERE STATUS='1' ${value || inArr ? str : ''} limit ${limit[0]}, ${limit[1]}`
   return format(sql, value)
 }
+
+exports.updateByParams = (table, values, conditions) => {
+  let str = ''
+  for (const item in conditions) {
+    str += ` AND ${item} = '${conditions[item]}'`
+  }
+  const sql = `UPDATE ${table} SET ? WHERE STATUS='1' ${str}`
+  return query(sql, values, conditions)
+}

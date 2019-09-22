@@ -26,7 +26,7 @@
           <span>{{ scope.row.url }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="补档地址" prop="add_url" align="center">
+      <el-table-column label="补单地址" prop="add_url" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.add_url }}</span>
         </template>
@@ -36,10 +36,15 @@
           <span>{{ scope.row.created_time }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="补单理由" prop="reason" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.reason }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" width="230" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
-          <el-button type="primary" :disabled="row.is_add === '1' || row.added === '1'" @click="apply(row)">
-            申请补档
+          <el-button type="primary" :disabled="row.is_add === '1' || row.added === '1' || $route.params.disable" @click="apply(row)">
+            申请补单
           </el-button>
         </template>
       </el-table-column>
@@ -79,18 +84,32 @@ export default {
       }
     },
     apply(row) {
-      const params = {
-        id: row.id,
-        order_id: row.order_id
-      }
-      applyUrl(params).then(res => {
-        if (res.status === 200) {
-          this.$message({
-            message: '申请补档成功',
-            type: 'success'
-          })
+      this.$prompt('请输入补单理由', '', {
+        inputType: 'textarea',
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputPattern: /\S/,
+        inputErrorMessage: '补单理由必填'
+      }).then(({ value }) => {
+        const params = {
+          id: row.id,
+          order_id: row.order_id,
+          reason: value
         }
-        this.getData()
+        applyUrl(params).then(res => {
+          if (res.status === 200) {
+            this.$message({
+              message: '申请补单成功',
+              type: 'success'
+            })
+          }
+          this.getData()
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '取消补单'
+        })
       })
     }
   }

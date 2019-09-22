@@ -7,6 +7,7 @@ router.prefix('/api')
 
 router
   .post('/login', loginController.login)
+  .post('/adminLogin', loginController.adminLogin)
 //   .post('/register', settingController.register)
   .get('/info', loginController.info)
   .post('/logout', loginController.logout)

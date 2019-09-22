@@ -18,9 +18,10 @@
         </el-form-item>
         <el-form-item label="希望多久完成：" prop="time">
           <el-radio-group v-model="form.time">
-            <el-radio label="1">1天</el-radio>
+            <!-- <el-radio label="1">1天</el-radio>
             <el-radio label="3">3天</el-radio>
-            <el-radio label="7">7天</el-radio>
+            <el-radio label="7">7天</el-radio> -->
+            <el-radio v-for="item of expectedTime" :key="item.label" :label="item.label">{{ item.name }}</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="项目名称：" prop="name">
@@ -41,6 +42,7 @@
 </template>
 <script>
 import Tinymce from '@/components/Tinymce'
+import { getExpectedTime } from '@/api/setting'
 
 export default {
   name: 'TinymceDemo',
@@ -49,6 +51,7 @@ export default {
     return {
       uploading: false,
       disabled: false,
+      expectedTime: [],
       form: {
         time: '',
         name: '',
@@ -64,12 +67,10 @@ export default {
         <ul>
             <li>上传文档</li>
             <li>直接这里输入格式为，只要格式人工看得懂均可直接复制进去
-                <p>问题1</p>
-                <p>问题1描述（没有可以去掉）</p>
-                <p>回答1:</p>
-                <p>问题2</p>
-                <p>问题2描述（没有可以去掉）</p>
-                <p>回答2:</p>
+                <p>文章标题1：</p>
+                <p>文章内容1：</p>
+                <p>文章标题2：</p>
+                <p>文章内容2：</p>
             </li>
             <li>一定要预览一下准确无误再进行下一步</li>
         </ul>
@@ -78,6 +79,7 @@ export default {
     }
   },
   created() {
+    this.getExpectedTime()
     if (this.$route.params.goback) {
       this.form.name = this.$store.state.title
       this.form.time = this.$store.state.time
@@ -145,6 +147,20 @@ export default {
         }
       })
       window.open(href, '_blank')
+    },
+    getExpectedTime() {
+      getExpectedTime({ dept: 'platform' }).then(res => {
+        for (const item of res.data) {
+          const param = {
+            label: item.name.split('天')[0],
+            name: item.name
+          }
+          this.expectedTime.push(param)
+          if (item.is_default === '1' && !this.$route.params.goback) {
+            this.form.time = item.name.split('天')[0]
+          }
+        }
+      })
     }
   }
 }

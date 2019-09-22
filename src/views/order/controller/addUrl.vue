@@ -11,7 +11,7 @@
       style="width: 100%;"
     >
 
-      <el-table-column v-if="false" label="地址编号" prop="id" align="center">
+      <el-table-column v-if="false" label="id编号" prop="id" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>
@@ -21,12 +21,17 @@
           <span>{{ scope.row.order_name }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="链接名称" prop="name" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.name }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="地址" prop="url" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.url }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="补档地址" prop="add_url" align="center">
+      <el-table-column label="补单地址" prop="add_url" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.add_url }}</span>
         </template>
@@ -36,16 +41,21 @@
           <span>{{ scope.row.created_time }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="230" class-name="small-padding fixed-width">
+      <el-table-column label="补单理由" prop="reason" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.reason }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column v-if="$store.state.user.roles[0]!=='service'" label="操作" align="center" width="230" class-name="small-padding fixed-width">
         <template slot-scope="{row}">
           <el-button type="primary" @click="showDialog(row)">
-            补档链接
+            补单链接
           </el-button>
         </template>
       </el-table-column>
     </el-table>
 
-    <el-dialog title="补档" :visible.sync="show">
+    <el-dialog title="补单" :visible.sync="show">
       <el-form ref="urlForm" :rules="rules" :model="urlForm" label-position="left" label-width="100px" style="width: 400px; margin-left:50px;">
         <el-form-item label="地址:" prop="url">
           <el-input v-model="urlForm.url" />
@@ -78,7 +88,7 @@ export default {
       },
       rules: {
         url: [
-          { type: 'url', required: true, message: '请输入补档链接地址', trigger: 'blur' }
+          { type: 'url', required: true, message: '请输入补单链接地址', trigger: 'blur' }
         ]
       },
       id: '',
@@ -123,7 +133,7 @@ export default {
           addUrl(params).then(res => {
             if (res.status === 200) {
               this.$message({
-                message: '补档成功',
+                message: '补单成功',
                 type: 'success'
               })
               this.id = ''
