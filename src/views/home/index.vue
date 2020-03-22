@@ -6,7 +6,7 @@
         <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12"><manager /></el-col> -->
         <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
           <el-card class="box-card home-top">
-            <h2 class="home-title">越光科技</h2>
+            <h2 class="home-title">{{ $store.state.user.name }}</h2>
             <p class="level">{{ getUserLevel() }}</p>
             <div>
               <p class="last-time">您好 {{ $store.state.user.name }} 您的上一次登录时间 {{ $store.state.user.lastTime }}</p>
@@ -21,7 +21,122 @@
         </el-col>
       </el-row>
       <el-row :gutter="20">
-        <el-col :xs="24" :sm="12" :md="8" :lg="8" :xl="8">
+        <el-col :xs="24" :sm="24" :md="16" :lg="16" :xl="16">
+          <el-row :gutter="20">
+            <el-col :xs="24" :sm="12" :md="16" :lg="16" :xl="16">
+              <el-card class="content-card line1">
+                <div class="content-title">
+                  <img src="../../assets/home/money.png" alt="账户资金">
+                  <p>账户资金</p>
+                </div>
+                <div class="money-box">
+                  <div class="balance-money">
+                    <p class="money">{{ allMoney }}</p>
+                    <span>账户余额</span>
+                  </div>
+                  <div class="divider" />
+                  <div class="balance-money">
+                    <p>{{ freezeMoney }}</p>
+                    <span>冻结余额</span>
+                  </div>
+                </div>
+                <div class="money-btn-box">
+                  <el-button type="warning" @click="invest">充值</el-button>
+                  <el-button type="info" @click="withdraw">提现</el-button>
+                  <a target="_blank" @click.prevent="showMoneyDetail">
+                    <span class="money-detail">查看资金明细></span>
+                  </a>
+                </div>
+              </el-card>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="8" :lg="8" :xl="8">
+              <el-card class="content-card line1">
+                <div class="content-title">
+                  <img src="../../assets/home/myOrder.png" alt="我的订单">
+                  <p>我的订单</p>
+                </div>
+                <div class="my-order">
+                  <router-link to="/myOrder/my">
+                    <img src="../../assets/home/order.png" alt="消费订单">
+                    <p>消费订单</p>
+                  </router-link>
+                </div>
+              </el-card>
+            </el-col>
+            <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
+              <el-card class="content-card helper line2 product-card">
+                <p class="helper-title">产品介绍</p>
+                <el-divider />
+                <el-row>
+                  <el-col :xs="12" :sm="6" :md="6" :lg="6" :xl="6" class="product-box">
+                    <div class="product">
+                      <img src="../../assets/home/question.png" alt="问答推广">
+                      <p class="product-title">问答推广</p>
+                      <p class="product-intro">让问题更简单</p>
+                      <router-link to="/article/copy-write-question">
+                        <el-button class="product-btn" type="warning">发布</el-button>
+                      </router-link>
+                    </div>
+                  </el-col>
+                  <el-col :xs="12" :sm="6" :md="6" :lg="6" :xl="6" class="product-box">
+                    <div class="product">
+                      <img src="../../assets/home/platform.png" alt="平台推广">
+                      <p class="product-title">平台推广</p>
+                      <p class="product-intro">轻松发布，不费事儿</p>
+                      <router-link to="/article/copy-write-platform">
+                        <el-button class="product-btn" type="warning">发布</el-button>
+                      </router-link>
+                    </div>
+                  </el-col>
+                  <el-col :xs="12" :sm="6" :md="6" :lg="6" :xl="6" class="product-box">
+                    <div class="product">
+                      <img src="../../assets/home/medium.png" alt="媒体推广">
+                      <p class="product-title">媒体推广</p>
+                      <p class="product-intro">因为优势，所以简单</p>
+                      <router-link to="/article/copy-write-medium">
+                        <el-button class="product-btn" type="warning">发布</el-button>
+                      </router-link>
+                    </div>
+                  </el-col>
+                  <el-col :xs="12" :sm="6" :md="6" :lg="6" :xl="6" class="product-box">
+                    <div class="product">
+                      <img src="../../assets/home/write.png" alt="文章代写">
+                      <p class="product-title">文章代写</p>
+                      <p class="product-intro">专业，一站式代写服务流程</p>
+                      <router-link to="/article/publish">
+                        <el-button class="product-btn" type="warning">发布</el-button>
+                      </router-link>
+                    </div>
+                  </el-col>
+                </el-row>
+              </el-card>
+            </el-col>
+          </el-row>
+        </el-col>
+        <el-col :xs="24" :sm="24" :md="8" :lg="8" :xl="8">
+          <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
+            <el-card class="box-card content-card adCard">
+              <div slot="header" class="clearfix">
+                <span>广告专区</span>
+              </div>
+              <div class="roll-text item">
+                <vue-seamless :data="listData" class="seamless-warp">
+                  <ul class="item">
+                    <li v-for="item in listData" :key="item.id" class="ad-list">
+                      <span class="title" style="color:green" v-html="item.content" />
+                    </li>
+                  </ul>
+                </vue-seamless>
+              </div>
+              <!-- <VueEmoji ref="emoji" :value="adText" @input="onInput" /> -->
+              <VueEmoji ref="emojiVue" width="100%" height="100" @input="onInput" />
+              <div class="send-box">
+                <el-button size="mini" type="primary" class="send-btn" :loading="btnLoading" @click="sendAD">发送</el-button>
+              </div>
+            </el-card>
+          </el-col>
+        </el-col>
+        <!-- <el-col :xs="24" :sm="12" :md="8" :lg="8" :xl="8">
           <el-card class="content-card line1">
             <div class="content-title">
               <img src="../../assets/home/money.png" alt="账户资金">
@@ -29,13 +144,12 @@
             </div>
             <div class="money-box">
               <div class="balance-money">
-                <p class="money">31264.76</p>
+                <p class="money">{{ allMoney }}</p>
                 <span>账户余额</span>
               </div>
-              <!-- <el-divider direction="vertical" /> -->
               <div class="divider" />
               <div class="balance-money">
-                <p>31264.76</p>
+                <p>{{ freezeMoney }}</p>
                 <span>冻结余额</span>
               </div>
             </div>
@@ -56,9 +170,7 @@
             </div>
             <div class="my-order">
               <router-link to="/myOrder/my">
-                <!-- <a href="#"> -->
                 <img src="../../assets/home/order.png" alt="消费订单">
-                <!-- </a> -->
                 <p>消费订单</p>
               </router-link>
             </div>
@@ -90,9 +202,9 @@
             <el-row>
               <el-col :xs="24" :sm="24" :md="24" :lg="12" :xl="12">
                 <p><span>联系人:</span><span>越光科技</span></p>
-                <p><span>QQ:</span><span>475603284</span></p>
-                <p><span>微信:</span><span>xxxx</span></p>
-                <p><span>手机号码:</span><span>13510520707</span></p>
+                <p><span>售前QQ:</span><a target="_blank" style="position: absolute;" href="http://wpa.qq.com/msgrd?v=3&uin=414449044&site=qq&menu=yes"><img border="0" src="http://wpa.qq.com/pa?p=2:414449044:51" alt="QQ：414449044" title="414449044"></a></p>
+                <p><span>售后QQ:</span><a target="_blank" style="position: absolute;" href="http://wpa.qq.com/msgrd?v=3&uin=345200771&site=qq&menu=yes"><img border="0" src="http://wpa.qq.com/pa?p=2:345200771:51" alt="QQ：345200771" title="345200771"></a></p>
+                <p style="margin: 0;"><span>手机号码:</span><span>15915967345</span></p>
               </el-col>
               <el-col :xs="24" :sm="24" :md="24" :lg="12" :xl="12">
                 <p style="margin: 5px;">微信二维码</p>
@@ -104,7 +216,7 @@
           </el-card>
         </el-col>
         <el-col :xs="24" :sm="24" :md="16" :lg="16" :xl="16">
-          <el-card class="content-card helper line2">
+          <el-card class="content-card helper line2 product-card">
             <p class="helper-title">产品介绍</p>
             <el-divider />
             <el-row>
@@ -114,7 +226,7 @@
                   <p class="product-title">问答推广</p>
                   <p class="product-intro">让问题更简单</p>
                   <router-link to="/article/copy-write-question">
-                    <el-button class="product-btn" type="warning">查看</el-button>
+                    <el-button class="product-btn" type="warning">发布</el-button>
                   </router-link>
                 </div>
               </el-col>
@@ -124,7 +236,7 @@
                   <p class="product-title">平台推广</p>
                   <p class="product-intro">轻松发布，不费事儿</p>
                   <router-link to="/article/copy-write-platform">
-                    <el-button class="product-btn" type="warning">查看</el-button>
+                    <el-button class="product-btn" type="warning">发布</el-button>
                   </router-link>
                 </div>
               </el-col>
@@ -134,7 +246,7 @@
                   <p class="product-title">媒体推广</p>
                   <p class="product-intro">因为优势，所以简单</p>
                   <router-link to="/article/copy-write-medium">
-                    <el-button class="product-btn" type="warning">查看</el-button>
+                    <el-button class="product-btn" type="warning">发布</el-button>
                   </router-link>
                 </div>
               </el-col>
@@ -144,19 +256,19 @@
                   <p class="product-title">文章代写</p>
                   <p class="product-intro">专业，一站式代写服务流程</p>
                   <router-link to="/article/publish">
-                    <el-button class="product-btn" type="warning">查看</el-button>
+                    <el-button class="product-btn" type="warning">发布</el-button>
                   </router-link>
                 </div>
               </el-col>
             </el-row>
           </el-card>
-        </el-col>
+        </el-col> -->
       </el-row>
     </div>
     <div class="function">
       <el-card>
         <div class="func-box">
-          <a href="">
+          <a target="_blank" @click.prevent="withdraw()">
             <img src="../../assets/home/kefu.png" alt="客服中心">
             <span>客服中心</span>
           </a>
@@ -184,15 +296,23 @@
 import { mapGetters } from 'vuex'
 // import User from './user'
 // import Manager from './manager'
-import { getLastPublic } from '@/api/setting'
+import { getLastPublic, changeFirstTime, addAd, getAdList } from '@/api/setting'
+import { getAccountMoney, getFreezeMoney } from '@/api/finance'
 import notice_icon from '@/assets/images/notice_icon.png'
+import vueSeamless from 'vue-seamless-scroll'
+import VueEmoji from 'emoji-vue'
 
 export default {
   name: 'Home',
-  //   components: { User, Manager },
+  components: { vueSeamless, VueEmoji },
   data() {
     return {
-      activeFlow: 'first'
+      activeFlow: 'first',
+      allMoney: 0,
+      freezeMoney: 0,
+      adText: '',
+      btnLoading: false,
+      listData: []
     }
   },
   computed: {
@@ -201,29 +321,33 @@ export default {
     ])
   },
   mounted() {
-    // console.log(this.$store)
+    this.$nextTick(() => {
+      const emojiDom = window.document.querySelectorAll('.emoji-menu')
+      const _emojiDom = emojiDom.length > 1 ? emojiDom[emojiDom.length - 1] : emojiDom[0]
+      let flag = false
+      const hb = new MutationObserver(m => {
+        m.forEach(n => {
+          if (!n.target.style.display && !flag) {
+            _emojiDom.style.top = '-250px'
+            _emojiDom.style.left = '-200px'
+            flag = true
+          }
+          if (n.target.style.display && flag) {
+            flag = false
+          }
+        })
+      })
+      hb.observe(_emojiDom, {
+        attributes: true
+
+      })
+    })
   },
   created() {
-    getLastPublic().then(res => {
-      if (res.data.length > 0) {
-        this.$alert(`
-                <div class="img-btn">
-                    <img src=${notice_icon} alt="提示">
-                    <h2 class="title">通知</h2>
-                </div>
-                <div class="welcome text">
-                    亲爱的<span class="user">${this.$store.state.user.name}</span>,您好！
-                </div>
-                <div class="content text">
-                    ${res.data[0].content}
-                </div>
-            `, {
-          dangerouslyUseHTMLString: true,
-          showCancelButton: false,
-          showConfirmButton: false
-        })
-      }
-    })
+    this.getLastPublic()
+    this.getAccountMoney()
+    this.getFreezeMoney()
+    this.getAdList()
   },
   methods: {
     getUserLevel() {
@@ -240,18 +364,114 @@ export default {
       return roles[role]
     },
     invest() {
-      this.$notify.error({
-        title: '信息',
-        message: '确定充值接口后完善'
-      })
+      // this.$notify.error({
+      //   title: '信息',
+      //   message: '确定充值接口后完善'
+      // })
+      this.$router.push(`/user/pay`)
     },
     withdraw() {
-      window.open('tencent://message/?uin=475603284&Site=Sambow&Menu=yes', '_blank')
+      window.open(this.$store.state.user.qqUrl, '_blank')
     },
     showMoneyDetail() {
-      this.$notify.error({
-        title: '信息',
-        message: '确定充值接口后完善'
+      // this.$notify.error({
+      //   title: '信息',
+      //   message: '确定充值接口后完善'
+      // })
+      this.$router.push(`/user/finance`)
+    },
+    getLastPublic() {
+      if (this.$store.state.user.firstTime === '1' && this.$store.state.user.roles[0] === 'customer') {
+        getLastPublic().then(res => {
+          if (res.data.length > 0) {
+            this.$alert(`
+                    <div class="img-btn">
+                        <img src=${notice_icon} alt="提示">
+                        <h2 class="title">通知</h2>
+                    </div>
+                    <div class="welcome text">
+                        亲爱的<span class="user">${this.$store.state.user.name}</span>,您好！
+                    </div>
+                    <div class="content text">
+                        ${res.data[0].content}
+                    </div>
+                `, {
+              dangerouslyUseHTMLString: true,
+              showCancelButton: false,
+              showConfirmButton: false
+            }).then(() => {
+              console.log('关闭公告')
+            })
+              .catch(action => {
+                console.log(this)
+                this.changeFirstTime()
+                console.log('关闭公告')
+              })
+          }
+        })
+      }
+    },
+    getAccountMoney() {
+      getAccountMoney().then(res => {
+        if (res.status === 200) {
+          this.allMoney = res.account
+        }
+      })
+    },
+    getFreezeMoney() {
+      getFreezeMoney().then(res => {
+        if (res.status === 200) {
+          this.freezeMoney = res.account
+        }
+      })
+    },
+    changeFirstTime() {
+      changeFirstTime().then(() => {
+        this.$store.dispatch('user/getInfo')
+      })
+    },
+    onInput(event) {
+      this.adText = event.data
+    },
+    sendAD() {
+      // 判断权限，后续增加代理
+      if (this.$store.state.user.roles[0] === 'admin' || this.$store.state.user.roles[0] === 'technology') {
+        if (this.adText.length > 0) {
+          if (this.adText.length < 289) {
+            this.btnLoading = true
+            addAd({ content: this.adText }).then(res => {
+              this.btnLoading = false
+              if (res.status === 200) {
+                this.$notify({
+                  title: '成功',
+                  message: '广告添加成功，待网站管理员审核后即可显示',
+                  type: 'success'
+                })
+                this.$refs.emojiVue.clear()
+              }
+            })
+          } else {
+            this.$notify.error({
+              title: '提示',
+              message: '发送内容不能超过289个字'
+            })
+          }
+        } else {
+          this.$notify.error({
+            title: '提示',
+            message: '发送内容不能为空'
+          })
+        }
+      } else {
+        this.$notify.error({
+          title: '提示',
+          message: '成为代理后方可发布广告'
+        })
+      }
+    },
+    getAdList() {
+      getAdList().then(res => {
+        this.listData = res.data
       })
     }
   }
@@ -259,6 +479,7 @@ export default {
 </script>
 
 <style lang="scss" scope>
+    @import "~@/styles/emoji/emoji.css";
     .home-form{
         margin-top: 2em;
     }
@@ -279,7 +500,7 @@ export default {
             display: inline-block;
             color: #a1a1a1;
             font-size: 0.9em;
-            margin-bottom: 0;
+            margin: 0;
         }
         .progree-box{
             display: inline;
@@ -320,7 +541,7 @@ export default {
         }
         .money-box{
             width: 70%;
-            margin: 20px 0 20px 30%;
+            margin: 0 0 20px 30%;
             .balance-money{
                 display: inline-block;
                 p{
@@ -346,7 +567,7 @@ export default {
         }
         .money-btn-box{
             width: 90%;
-            margin: 35px 0 0 10%;
+            margin: 25px 0 0 10%;
             position: relative;
             .money-detail{
                 font-size: 0.1em;
@@ -357,7 +578,7 @@ export default {
             }
         }
         .my-order{
-            margin: 35px 0 0;
+            margin: 0;
             text-align: center;
             p{
                 font-size: 1em;
@@ -375,9 +596,14 @@ export default {
             .helper-tags{
                 text-align: center;
                 img{
-                    margin: 20px;
-                    width: 70%;
+                    margin: 20px 0 0;
+                    width: 80%;
                 }
+            }
+        }
+        &.product-card{
+            .el-card__body{
+                padding-bottom: 0 !important;
             }
         }
         .product-box{
@@ -391,11 +617,12 @@ export default {
                     margin: 20px 0 0;
                 }
                 p{
-                    margin:10px 0 10px;
+                    margin:0 0 10px;
                 }
 
                 .product-intro{
-                    font-size: 0.6em
+                    font-size: 0.6em;
+                    height: 1.2em;
                 }
                 .product-btn{
                     margin: 5px 0 10px;
@@ -404,11 +631,36 @@ export default {
             }
         }
         &.line1{
-            height:33vh;
+            height:31vh;
         }
         &.line2{
             height:37vh;
         }
+        &.adCard{
+            height: 70.8vh;
+            .el-card__body{
+                height: 88%;
+            }
+            .send-box{
+                position: relative;
+                .send-btn{
+                    position: absolute;
+                    top: -36px;
+                    right: 5px;
+                }
+            }
+            .ad-list{
+                list-style: none;
+            }
+            .ad-text{
+                color:green;
+            }
+        }
+        .seamless-warp {
+            height: 100%;
+            overflow: hidden;
+        }
+
     }
     @media (max-width:767px) {
         .progree-box{
@@ -456,6 +708,12 @@ export default {
             font-size: 0.5em
         }
     }
+    .el-tabs__header{
+        margin: 0
+    }
+    .el-card__body{
+        padding: 10px 20px 10px
+    }
 </style>
 <style scope>
     .public-btn{
@@ -479,7 +737,14 @@ export default {
         text-indent: 2em;
         margin-top: 20px;
     }
-    .text{
+    .roll-text{
+        height: 75%;
         font-size: 1.3em;
     }
+</style>
+<style >
+    span.emoji{
+            background-size: inherit;
+            vertical-align: inherit !important;
+        }
 </style>

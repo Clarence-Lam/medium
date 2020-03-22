@@ -1,6 +1,8 @@
 <template>
   <div>
     <div class="components-container commit-container">
+      <h3 class="app-container-title">媒体推广展示</h3>
+      <hr class="app-container-hr">
       <div class="box-black">
         <el-form ref="caseForm" :model="caseForm" label-width="150px">
           <div v-for="item in typesName" :key="item.id" class="box-content">
@@ -18,6 +20,13 @@
         :dept="'medium'"
         :case-form="caseForm"
       />
+    </div>
+    <div class="footer">
+      <div style="margin: 5px;text-align:center">
+        <!-- <router-link to="/article/copy-write-medium"> -->
+        <el-button type="success" class="diglog-btn" style="margin-left:-17%" @click="gotoCopyWrite">前往发布产品</el-button>
+        <!-- </router-link> -->
+      </div>
     </div>
   </div>
 </template>
@@ -37,7 +46,8 @@ export default {
       typesName: [],
       types: {},
       caseForm: {},
-      multipleSelection: []
+      multipleSelection: [],
+      dept: 'medium'
     }
   },
   created() {
@@ -68,6 +78,18 @@ export default {
     },
     delSelection(item) {
       this.$refs.table.delSelection(item)
+    },
+    gotoCopyWrite() {
+      this.$store.state.multipleSelection = this.multipleSelection
+      this.$store.state.dept = this.dept
+      this.$router.push(
+        {
+          name: `copy-write-${this.dept}`,
+          params: {
+            isSelection: true
+          }
+        }
+      )
     }
   }
 }
@@ -105,5 +127,13 @@ export default {
 }
 /deep/.commit-radio{
     margin-top: 10px
+}
+.footer{
+    width: 100%;
+    height: 45px;
+    position: fixed;
+    bottom: 0;
+    background: #4795C5;
+    z-index: 9999;
 }
 </style>

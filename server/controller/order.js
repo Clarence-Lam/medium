@@ -1,76 +1,85 @@
-const userModel = require('../model/user.js')
+// const userModel = require('../model/user.js')
 const DBHelper = require('../helper/DBHelper.js')
+const Helper = require('../helper/index.js')
 const Orders = require('../model/orders.js')
 const uuidv1 = require('uuid/v1')
 const moment = require('moment')
-const bcrypt = require('bcrypt')
+// const bcrypt = require('bcrypt')
 const _ = require('lodash')
+var fs = require('fs')
+const path = require('path')
 
 class OrderController {
-  async verification(ctx) {
-    // 验证账户余额
-  }
-
   async addOrder(ctx) {
-    const { title, finish_time, mark, url, dept, cases, num, money, sign, type_article, work_nunber } = ctx.request.body
-    const id = uuidv1()
-    const params = {
-      id,
-      customer_id: ctx.session.userId,
-      customer_name: ctx.session.userName,
-      customer_level: ctx.session.level,
-      title,
-      url,
-      finish_time,
-      dept,
-      mark,
-      case_id_json: JSON.stringify(cases),
-      num,
-      money,
-      state: 'start',
-      created_by: ctx.session.userName,
-      created_time: moment().format('YYYY-MM-DD HH:mm:ss'),
-      sign, type_article, work_nunber
+    const { form, togetherForm } = ctx.request.body
+    let money = form.money
+    if (togetherForm && Object.keys(togetherForm).length > 0) {
+      money += togetherForm.money
     }
-    return DBHelper.addRow('orders', params).then(async() => {
-      if (cases) {
-        await cases.forEach(item => {
-          const caseParams = {
-            id: uuidv1(),
-            order_id: id,
-            case_id: item.id,
-            case_name: item.name,
-            created_by: ctx.session.userName,
-            created_time: moment().format('YYYY-MM-DD HH:mm:ss')
-          }
-          DBHelper.addRow('order_case', caseParams)
-        })
-      }
 
+    const usableMoney = await Helper.getUsableMoney(ctx.session.userId)
+    if (usableMoney < money) {
+      ctx.body = {
+        status: 400,
+        statusText: 'fail',
+        msg: '金额不足，请前往充值'
+      }
+      return
+    }
+    return createOrder(form, ctx).then(res => {
+      if (res && togetherForm && Object.keys(togetherForm).length > 0) {
+        createOrder(togetherForm, ctx)
+      }
       ctx.body = {
         status: 200,
         statusText: 'ok',
         msg: '创建订单'
       }
+      return
+    }).catch(() => {
+      ctx.body = {
+        status: 500,
+        statusText: 'fail',
+        msg: '创建订单失败，请重试'
+      }
+      return
     })
   }
   // 确认订单时查询案例
   async getCommitTable(ctx) {
-    const { dept, search } = ctx.request.body
+    let onlyCollection = false
+
+    const { dept, search, fuzzySearch } = ctx.request.body
     const pageNum = parseInt(ctx.request.body.page || 1, 10)
     const end = 10 // 默认页数
     const start = (pageNum - 1) * end
-    const limit = [start, end]
+    let limit = [start, end]
     const inArr = []
     let orderBy = ''
     const params = {
       dept,
       status: 1
     }
+
     for (const item in search) {
       if (search[item] !== null) {
-        inArr.push(search[item])
+        // inArr.push(search[item])
+        console.log(search[item])
+        await DBHelper.getList('types_field', [0, 1], { id: search[item] }).then(result => {
+          const res = result[0]
+          //   console.log(res)
+          if (res && res.name === '收藏') {
+            onlyCollection = true
+          } else {
+            inArr.push(search[item])
+          }
+        })
       }
+    }
+
+    const originalLimit = limit
+    if (onlyCollection) {
+      limit = [0, 1000]
     }
 
     const collection = await DBHelper.getList('collection', [0, 1000], { customer_id: ctx.session.userId })
@@ -100,9 +109,10 @@ class OrderController {
         for (const item of array) {
           inStr.id.push(item)
         }
+
         return Promise.all(
           [
-            Orders.getOrderCases('article_cases', limit, params, inStr, orderBy).then(result => {
+            Orders.getOrderCases('article_cases', limit, params, inStr, orderBy, fuzzySearch).then(result => {
               const res = []
               for (const item in result) {
                 const obj = result[item]
@@ -116,13 +126,29 @@ class OrderController {
               }
               return res
             }),
-            Orders.getOrderCasesTotal('article_cases', params, inStr, orderBy)
+            Orders.getOrderCasesTotal('article_cases', params, inStr, orderBy, fuzzySearch)
           ]).then(result => {
-          ctx.body = {
-            status: 200,
-            statusText: 'ok',
-            data: result[0],
-            num: result[1][0].count
+          // 特殊处理收藏
+          if (onlyCollection) {
+            const collArr = []
+            for (const item of result[0]) {
+              if (item.is_collection) {
+                collArr.push(item)
+              }
+            }
+            ctx.body = {
+              status: 200,
+              statusText: 'ok',
+              data: _.slice(collArr, originalLimit[0], originalLimit[0] + originalLimit[1]),
+              num: collArr.length
+            }
+          } else {
+            ctx.body = {
+              status: 200,
+              statusText: 'ok',
+              data: result[0],
+              num: result[1][0].count
+            }
           }
         })
       } else {
@@ -136,7 +162,7 @@ class OrderController {
     } else {
       return Promise.all(
         [
-          DBHelper.getList('article_cases', limit, { dept }).then(result => {
+          Orders.getOrderCases('article_cases', limit, params, [], '', fuzzySearch).then(result => {
             const res = []
             for (const item in result) {
               const obj = result[item]
@@ -150,13 +176,28 @@ class OrderController {
             }
             return res
           }),
-          DBHelper.getListTotal('article_cases', { dept })
+          Orders.getOrderCasesTotal('article_cases', params, [], '', fuzzySearch)
         ]).then(result => {
-        ctx.body = {
-          status: 200,
-          statusText: 'ok',
-          data: result[0],
-          num: result[1][0].count
+        if (onlyCollection) {
+          const collArr = []
+          for (const item of result[0]) {
+            if (item.is_collection) {
+              collArr.push(item)
+            }
+          }
+          ctx.body = {
+            status: 200,
+            statusText: 'ok',
+            data: _.slice(collArr, originalLimit[0], originalLimit[0] + originalLimit[1]),
+            num: collArr.length
+          }
+        } else {
+          ctx.body = {
+            status: 200,
+            statusText: 'ok',
+            data: result[0],
+            num: result[1][0].count
+          }
         }
       })
     }
@@ -164,19 +205,29 @@ class OrderController {
   // 后台人员查询订单
   async getOrderTable(ctx) {
     // ctx.session.role = 'technology'
-    const { request_state } = ctx.query
+    const { request_state, customer_id, created_time, published_time, custName, orderId } = ctx.query
     const params = { state: request_state }
     const pageNum = parseInt(ctx.query.page || 1, 10)// 页码
     const end = 10 // 默认页数
     const start = (pageNum - 1) * end
     const limit = [start, end]
-    console.log(params)
     const userRole = ctx.session.role
+    if (customer_id) {
+      params['customer_id'] = customer_id
+    }
+    let created_timeArr = null
+    if (created_time) {
+      created_timeArr = created_time.split('|')
+    }
+    let published_timeArr = null
+    if (published_time) {
+      published_timeArr = published_time.split('|')
+    }
     let state = null
     if (userRole === 'admin' || userRole === 'service') {
       state = null
     } else if (userRole === 'technology') {
-      state = ['plan', 'working', 'stop', 'uphold']
+      state = ['plan', 'working', 'stop', 'uphold', 'complaining', 'finish', 'discard']
     } else {
       ctx.body = {
         status: 200,
@@ -185,10 +236,19 @@ class OrderController {
         num: 0
       }
     }
+    const likeParams = {}
+    if (custName) {
+      likeParams['customer_name'] = custName
+    }
+    let id = null
+    if (orderId && orderId.length === 32) {
+      id = `${orderId.slice(0, 8)}-${orderId.slice(8, 12)}-${orderId.slice(12, 16)}-${orderId.slice(16, 20)}-${orderId.slice(20)}`
+      params['id'] = id
+    }
     return Promise.all(
       [
-        Orders.getOrderTable(params, state, limit),
-        Orders.getOrderTableTotal(params, state)
+        Orders.getOrderTable(params, state, limit, { created_time: created_timeArr, published_time: published_timeArr }, likeParams),
+        Orders.getOrderTableTotal(params, state, { created_time: created_timeArr, published_time: published_timeArr }, likeParams)
       ]).then(result => {
       ctx.body = {
         status: 200,
@@ -211,9 +271,10 @@ class OrderController {
   }
 
   async saveState(ctx) {
-    const { id, state } = ctx.request.body
+    const { id, state, mark } = ctx.request.body
     const params = {
       state,
+      mark,
       updated_by: ctx.session.userName,
       updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
     }
@@ -226,9 +287,10 @@ class OrderController {
   }
 
   async failState(ctx) {
-    const { id, state, refuse_reason } = ctx.request.body
+    const { id, state, refuse_reason, mark } = ctx.request.body
     const params = {
       state,
+      mark,
       updated_by: ctx.session.userName,
       updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
     }
@@ -236,7 +298,21 @@ class OrderController {
       params['refuse_reason'] = refuse_reason
     }
     await DBHelper.updateRow('orders', id, params).then(result => {
-      // TODO 恢复金额
+      DBHelper.getList('freeze_flow', [0, 1], { order_id: id }).then(res => {
+        if (res.length === 1 && res[0].type === 'freeze') {
+          DBHelper.addRow('freeze_flow', {
+            id: uuidv1(),
+            customer_id: res[0].customer_id,
+            customer_name: res[0].customer_name,
+            type: 'unfreeze',
+            order_id: id,
+            order_name: res[0].order_name,
+            money: res[0].money,
+            created_by: ctx.session.userName,
+            created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+          })
+        }
+      })
       ctx.body = {
         status: 200,
         statusText: 'ok'
@@ -245,14 +321,40 @@ class OrderController {
   }
 
   async finishState(ctx) {
-    const { id, state } = ctx.request.body
+    const { id, state, mark } = ctx.request.body
     const params = {
       state,
+      mark,
       updated_by: ctx.session.userName,
       updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
     }
     await DBHelper.updateRow('orders', id, params).then(result => {
-      // TODO 结算金额
+      DBHelper.getList('freeze_flow', [0, 1], { order_id: id }).then(res => {
+        if (res.length === 1 && res[0].type === 'freeze') {
+          DBHelper.addRow('freeze_flow', {
+            id: uuidv1(),
+            customer_id: res[0].customer_id,
+            customer_name: res[0].customer_name,
+            type: 'unfreeze',
+            order_id: id,
+            order_name: res[0].order_name,
+            money: res[0].money,
+            created_by: ctx.session.userName,
+            created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+          })
+          DBHelper.addRow('capital_flow', {
+            id: uuidv1(),
+            customer_id: res[0].customer_id,
+            customer_name: res[0].customer_name,
+            type: 'sub',
+            order_id: id,
+            order_name: res[0].order_name,
+            money: -res[0].money,
+            created_by: ctx.session.userName,
+            created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+          })
+        }
+      })
       ctx.body = {
         status: 200,
         statusText: 'ok'
@@ -261,7 +363,7 @@ class OrderController {
   }
 
   async submitOrder(ctx) {
-    const { id, urlArr } = ctx.request.body
+    const { id, urlArr, mark } = ctx.request.body
     // TODO 更改不包补状态为finish
     await DBHelper.getList('orders', [0, 10], { id }).then(async res => {
       let state = 'uphold'
@@ -276,15 +378,17 @@ class OrderController {
               }
             }
           }
+        } else if (res[0].sign === 'write') {
+          state = 'finish'
         }
 
         const params = {
           state: state,
+          mark,
           published_time: moment().format('YYYY-MM-DD HH:mm:ss')
         }
         await DBHelper.updateRow('orders', id, params).then(async result => {
           if (result.changedRows === 1) {
-            // TODO 结算金额
             for await (const item of urlArr) {
               const params = {
                 id: uuidv1(),
@@ -296,6 +400,34 @@ class OrderController {
                 created_time: moment().format('YYYY-MM-DD HH:mm:ss')
               }
               DBHelper.addRow('order_url', params)
+            }
+            if (state === 'finish') {
+              DBHelper.getList('freeze_flow', [0, 1], { order_id: id }).then(res => {
+                if (res.length === 1 && res[0].type === 'freeze') {
+                  DBHelper.addRow('freeze_flow', {
+                    id: uuidv1(),
+                    customer_id: res[0].customer_id,
+                    customer_name: res[0].customer_name,
+                    type: 'unfreeze',
+                    order_id: id,
+                    order_name: res[0].order_name,
+                    money: res[0].money,
+                    created_by: ctx.session.userName,
+                    created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+                  })
+                  DBHelper.addRow('capital_flow', {
+                    id: uuidv1(),
+                    customer_id: res[0].customer_id,
+                    customer_name: res[0].customer_name,
+                    type: 'sub',
+                    order_id: id,
+                    order_name: res[0].order_name,
+                    money: -res[0].money,
+                    created_by: ctx.session.userName,
+                    created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+                  })
+                }
+              })
             }
             ctx.body = {
               status: 200,
@@ -312,14 +444,77 @@ class OrderController {
     })
   }
 
+  async submitOrderRar(ctx) {
+    const { id, mark, fileID, fileName } = ctx.request.body
+    await DBHelper.getList('orders', [0, 10], { id }).then(async res => {
+      console.log(1)
+      if (res.length > 0 && res[0].state === 'working') {
+        await fs.mkdir(path.join(__dirname, `../../upload/${id}`), err => {
+          console.log(2)
+
+          if (err) {
+            ctx.body = {
+              status: 400,
+              statusText: '上传失败，请稍后再试。'
+            }
+          }
+          const suffix = getSuffixName(fileName)
+          fs.renameSync(path.join(__dirname, `../../upload/temp/${fileID}.${suffix}`), path.join(__dirname, `../../upload/${id}/${fileName}`))
+          console.log(3)
+        })
+        const params = {
+          state: 'uphold',
+          mark,
+          published_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+          updated_by: ctx.session.userName,
+          updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
+        }
+
+        await DBHelper.updateRow('orders', id, params).then(async result => {
+          console.log(4)
+          if (result.changedRows === 1) {
+            const uploadParams = {
+              id: uuidv1(),
+              order_id: id,
+              order_name: res[0].title,
+              sign: 'first',
+              name: fileName,
+              file_url: `${id}/${fileName}`,
+              created_by: ctx.session.userName,
+              created_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+              updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
+            }
+            await DBHelper.addRow('order_upload', uploadParams).then(() => {
+              console.log(5)
+
+              ctx.body = {
+                status: 200,
+                statusText: 'ok'
+              }
+            })
+          }
+        })
+      } else {
+        ctx.body = {
+          status: 400,
+          statusText: '查询不到订单或状态不正确'
+        }
+      }
+    })
+  }
+
+  // post
   async getMyOrder(ctx) {
-    const { search } = ctx.query
-    const params = { ...search }
-    const pageNum = parseInt(ctx.query.page || 1, 10)// 页码
+    const { search } = ctx.request.body
+    const { state } = search
+    const params = {}
+    if (state) {
+      params['state'] = state
+    }
+    const pageNum = parseInt(ctx.request.body.page || 1, 10)// 页码
     const end = 10 // 默认页数
     const start = (pageNum - 1) * end
     const limit = [start, end]
-    console.log(ctx.session.userId)
     params['customer_id'] = ctx.session.userId
     return Promise.all(
       [
@@ -337,17 +532,33 @@ class OrderController {
 
   async getUrl(ctx) {
     const { order_id } = ctx.query
-    return DBHelper.getList('order_url', [0, 1000], { order_id }).then(result => {
-      ctx.body = {
-        status: 200,
-        statusText: 'ok',
-        data: result
+    return DBHelper.getList('orders', [0, 1], { id: order_id }).then(res => {
+      if (res[0].sign === 'copy_write') {
+        return DBHelper.getList('order_url', [0, 1000], { order_id }).then(result => {
+          ctx.body = {
+            status: 200,
+            statusText: 'ok',
+            data: result,
+            sign: 'copy_write',
+            order_name: res[0].title
+          }
+        })
+      } else {
+        return DBHelper.getList('order_upload', [0, 1], { order_id }).then(result => {
+          ctx.body = {
+            status: 200,
+            statusText: 'ok',
+            data: result,
+            sign: 'write',
+            order_name: res[0].title
+          }
+        })
       }
     })
   }
 
   async applyUrl(ctx) {
-    const { id, order_id, reason } = ctx.request.body
+    const { id, order_id, reason, sign } = ctx.request.body
     const urlParams = {
       is_add: '1',
       reason,
@@ -360,10 +571,11 @@ class OrderController {
       updated_time: moment().format('YYYY-MM-DD HH:mm:ss'),
       state: 'complaining'
     }
+    const table = sign === 'copy_write' ? 'order_url' : 'order_upload'
     return Promise.all(
       [
         DBHelper.updateRow('orders', order_id, params),
-        DBHelper.updateRow('order_url', id, urlParams)
+        DBHelper.updateRow(table, id, urlParams)
       ]).then(result => {
       ctx.body = {
         status: 200,
@@ -373,37 +585,93 @@ class OrderController {
   }
 
   async addUrl(ctx) {
-    const { id, order_id, add_url } = ctx.request.body
-    const params = {
-      is_add: '0',
-      added: '1',
-      add_url,
-      updated_by: ctx.session.userName,
-      updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
-    }
-    return DBHelper.updateRow('order_url', id, params).then(async result => {
-      return await DBHelper.getList('order_url', [0, 1000], { id: order_id }).then(async res => {
-        let isAdd = true
-        for (const item of res) {
-          if (item.is_add === '1') {
-            isAdd = false
-          }
-        }
-        if (isAdd) {
-          const orderParams = {
-            is_add: '0',
-            updated_by: ctx.session.userName,
-            updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
-          }
-          return await DBHelper.updateRow('orders', order_id, orderParams).then(res1 => {
-            ctx.body = {
-              status: 200,
-              statusText: 'ok'
+    const { id, order_id, url, type, sign } = ctx.request.body
+    if (sign === 'copy_write') {
+      const params = {
+        is_add: '0',
+        added: '1',
+        //   add_url,
+        updated_by: ctx.session.userName,
+        updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
+      }
+      if (type === 'change') {
+        params['url'] = url
+      } else {
+        params['add_url'] = url
+      }
+      return DBHelper.updateRow('order_url', id, params).then(async result => {
+        DBHelper.updateRow('orders', order_id, {
+          state: 'uphold',
+          updated_by: ctx.session.userName,
+          updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
+        })
+        return await DBHelper.getList('order_url', [0, 1000], { id: order_id }).then(async res => {
+          let isAdd = true
+          for (const item of res) {
+            if (item.is_add === '1') {
+              isAdd = false
             }
-          })
-        }
+          }
+          if (isAdd) {
+            const orderParams = {
+              is_add: '0',
+              updated_by: ctx.session.userName,
+              updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
+            }
+            return await DBHelper.updateRow('orders', order_id, orderParams).then(res1 => {
+              ctx.body = {
+                status: 200,
+                statusText: 'ok'
+              }
+            })
+          }
+        })
       })
-    })
+    } else if (sign === 'write') {
+      const file = ctx.request.files.file
+      const fileName = file.name
+      if (file.path) {
+        const postfix = getSuffixName(fileName)
+        if (postfix === 'rar' || postfix === 'zip') {
+          const reader = fs.createReadStream(file.path)
+          const fileID = uuidv1()
+          const prefix = type === 'change' ? '' : '补单-'
+          const filePath = path.join(__dirname, `../../upload/${order_id}/`) + `${prefix}${fileName}`
+          const upStream = fs.createWriteStream(filePath)
+          reader.pipe(upStream)
+          const changeValue = {}
+          if (type === 'change') {
+            changeValue['sign'] = 'change'
+            changeValue['name'] = fileName
+            changeValue['file_url'] = `${order_id}/${fileName}`
+            changeValue['updated_by'] = ctx.session.userName
+            changeValue['updated_time'] = moment().format('YYYY-MM-DD HH:mm:ss')
+          } else {
+            changeValue['sign'] = 'add'
+            changeValue['add_name'] = fileName
+            changeValue['add_file_url'] = `${order_id}/补单-${fileName}`
+            changeValue['updated_by'] = ctx.session.userName
+            changeValue['updated_time'] = moment().format('YYYY-MM-DD HH:mm:ss')
+          }
+          return DBHelper.updateByParams('order_upload', changeValue, { order_id }).then(result => {
+            DBHelper.updateRow('orders', order_id, {
+              state: 'uphold',
+              updated_by: ctx.session.userName,
+              updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
+            })
+            ctx.body = {
+              code: 200,
+              msg: '上传成功',
+              data: {
+                fileID,
+                fileName
+              }}
+          })
+        } else {
+          ctx.body = { code: -1, msg: '请上传rar或zip格式的文件' }
+        }
+      }
+    }
   }
 
   async toggleCollection(ctx) {
@@ -434,7 +702,66 @@ class OrderController {
     }
   }
 }
-
+// 创建订单，传入form
+function createOrder(form, ctx) {
+  const { title, finish_time, mark, url, dept, cases, num, money, sign, type_article, work_nunber } = form
+  const id = uuidv1()
+  const promise = new Promise(function(resolve, reject) {
+    const params = {
+      id,
+      customer_id: ctx.session.userId,
+      customer_name: ctx.session.userName,
+      customer_level: ctx.session.level,
+      title,
+      url,
+      finish_time,
+      dept,
+      mark,
+      case_id_json: JSON.stringify(cases),
+      num,
+      money,
+      state: 'start',
+      created_by: ctx.session.userName,
+      created_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+      sign, type_article, work_nunber
+    }
+    DBHelper.addRow('orders', params).then(async() => {
+      if (cases) {
+        await cases.forEach(item => {
+          const caseParams = {
+            id: uuidv1(),
+            order_id: id,
+            case_id: item.id,
+            case_name: item.name,
+            created_by: ctx.session.userName,
+            created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+          }
+          DBHelper.addRow('order_case', caseParams)
+        })
+      }
+      DBHelper.addRow('freeze_flow', {
+        id: uuidv1(),
+        customer_id: ctx.session.userId,
+        customer_name: ctx.session.userName,
+        type: 'freeze',
+        order_id: id,
+        order_name: title,
+        money,
+        created_by: ctx.session.userName,
+        created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+      }).catch(err => {
+        console.log('冻结金额失败')
+        reject(err)
+      })
+      resolve(true)
+    }).catch(err => {
+      console.log('创建订单失败')
+      console.log(err)
+      reject(err)
+    })
+  })
+  return promise
+}
 // 处理数组，保留重复，去重
 function unique(arr) {
   const Arr = filterUnique(arr)
@@ -457,6 +784,12 @@ function mixed(arr) {
   } else {
     return []
   }
+}
+
+// 获取文件后缀
+function getSuffixName(fileName) {
+  const nameList = fileName.split('.')
+  return nameList[nameList.length - 1]
 }
 
 module.exports = new OrderController()

@@ -154,6 +154,13 @@ export default {
           editor.on('FullscreenStateChanged', (e) => {
             _this.fullscreen = e.state
           })
+        },
+        images_upload_handler: function(blobInfo, success, failure) {
+          var reader = new FileReader()
+          reader.readAsDataURL(blobInfo.blob())
+          reader.onload = function() {
+            success(this.result)
+          }
         }
         // 整合七牛上传
         // images_dataimg_filter(img) {

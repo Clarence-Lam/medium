@@ -189,3 +189,21 @@ aside {
 .multiselect--active {
   z-index: 1000 !important;
 }
+
+.app-container-title{
+    color: #F37B1D;
+    font-weight: 700;
+    margin-top: 0;
+    display: inline-block;
+}
+.app-container-hr{
+    display: block;
+    padding: 0;
+    border: 0;
+    height: 0;
+    border-top: 1px solid #eee;
+    -webkit-box-sizing: content-box;
+    box-sizing: content-box;
+    margin: 0px -45px 20px;
+    overflow: hidden;
+}

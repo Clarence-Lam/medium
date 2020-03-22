@@ -1,5 +1,7 @@
 <template>
   <div class="app-container">
+    <h3 class="app-container-title">问答推广/产品管理</h3>
+    <hr class="app-container-hr">
     <CaseTable
       :table="'question'"
       :table-lable="tableLable"

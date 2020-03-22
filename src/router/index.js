@@ -66,6 +66,11 @@ export const constantRoutes = [
     hidden: true
   },
   {
+    path: '/resetting',
+    component: () => import('@/views/login/resetting'),
+    hidden: true
+  },
+  {
     path: '/auth-redirect',
     component: () => import('@/views/login/auth-redirect'),
     hidden: true
@@ -99,7 +104,7 @@ export const constantRoutes = [
     path: '/watch-platform',
     component: Layout,
     // redirect: '/article/publish1',
-    name: '平台推广',
+    name: '平台推广展示',
     hidden: true,
     showTop: true,
     meta: { title: '平台推广', icon: 'example' },
@@ -115,7 +120,7 @@ export const constantRoutes = [
   {
     path: '/watch-medium',
     component: Layout,
-    name: '媒体推广',
+    name: '媒体推广展示',
     meta: { title: '媒体推广', icon: 'example' },
     hidden: true,
     showTop: true,
@@ -131,7 +136,7 @@ export const constantRoutes = [
   {
     path: '/watch-question',
     component: Layout,
-    name: '问答推广',
+    name: '问答推广展示',
     meta: { title: '问答推广', icon: 'example' },
     hidden: true,
     showTop: true,
@@ -217,7 +222,7 @@ export const asyncRoutes = [
     path: '/home',
     component: Layout,
     redirect: '/home',
-    meta: { title: '用户主页', icon: 'example', roles: ['customer'] },
+    meta: { title: '用户主页', icon: 'example', roles: ['customer', 'service'] },
     children: [{
       path: 'home',
       name: 'home',
@@ -244,12 +249,13 @@ export const asyncRoutes = [
         component: () => import('@/views/user/finance/index'),
         meta: { title: '财务报表', icon: 'tree' }
       },
-      {
-        path: 'news',
-        name: 'news',
-        component: () => import('@/views/user/news/index'),
-        meta: { title: '系统消息', icon: 'tree' }
-      },
+      // TODO 第二版完善
+      //   {
+      //     path: 'news',
+      //     name: 'news',
+      //     component: () => import('@/views/user/news/index'),
+      //     meta: { title: '系统消息', icon: 'tree' }
+      //   },
       {
         path: 'withdraw',
         name: 'withdraw',
@@ -360,13 +366,13 @@ export const asyncRoutes = [
     path: '/order',
     name: 'order',
     component: Layout,
-    meta: { roles: ['admin', 'service', 'technology'] },
+    meta: { roles: ['admin', 'service', 'technology', 'finance'] },
     children: [
       {
         path: 'controller',
         name: 'controller',
         component: () => import('@/views/order/controller/index'),
-        meta: { title: '订单管理', icon: 'documentation', roles: ['admin', 'service', 'technology'] }
+        meta: { title: '订单管理', icon: 'documentation', roles: ['admin', 'service', 'technology', 'finance'] }
       },
       {
         path: 'handle',
@@ -392,9 +398,31 @@ export const asyncRoutes = [
     meta: {
       title: '设置',
       icon: 'nested',
-      roles: ['admin', 'technology', 'service']
+      roles: ['admin', 'technology', 'service', 'finance']
     },
     children: [
+      {
+        path: 'finance',
+        component: () => import('@/views/setting/finance/index'),
+        meta: {
+          title: '财务管理',
+          roles: ['admin', 'finance']
+        }
+      },
+      {
+        path: 'finance-lists',
+        component: () => import('@/views/setting/finance/financeLists'),
+        name: 'finance-lists',
+        meta: { title: '财务管理订单详情', meta: { roles: ['admin', 'finance'] }},
+        hidden: true
+      },
+      {
+        path: 'finance-cust',
+        name: 'finance-cust',
+        component: () => import('@/views/user/finance/index'),
+        meta: { title: '财务报表', icon: 'tree' },
+        hidden: true
+      },
       {
         path: 'user',
         component: () => import('@/views/setting/user/index'),
@@ -412,10 +440,26 @@ export const asyncRoutes = [
         }
       },
       {
+        path: 'ad',
+        component: () => import('@/views/setting/ad/index'),
+        meta: {
+          title: '首页广告管理',
+          roles: ['admin', 'technology']
+        }
+      },
+      {
         path: 'customer',
         component: () => import('@/views/setting/customer/index'),
         meta: {
           title: '客户管理',
+          roles: ['admin', 'service']
+        }
+      },
+      {
+        path: 'invoice',
+        component: () => import('@/views/setting/invoice/index'),
+        meta: {
+          title: '发票管理',
           roles: ['admin', 'service']
         }
       },

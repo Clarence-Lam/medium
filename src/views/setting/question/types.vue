@@ -1,6 +1,7 @@
 <template>
   <div class="app-container">
-    <h3 style="padding-left: 20px;">问答推广配置</h3>
+    <h3 class="app-container-title">问答推广/类目配置</h3>
+    <hr class="app-container-hr">
     <TypeName :types-name="typesName" :dept="'question'" />
   </div>
 </template>

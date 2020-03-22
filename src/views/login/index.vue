@@ -2,20 +2,29 @@
   <div class="login_bg">
     <div class="unit">
       <div class="fl_div">
+        <h2>
+          TM媒介
+        </h2>
         <!-- <img src="/static/index/images/login/login.png"> -->
         <div class="line" />
-        <div class="call_tel">
+        <!-- <div class="call_tel">
           <div class="text">注册咨询热线</div>
           <div class="tel">0754-8888-8888</div>
-        </div>
-        <ul>
+        </div> -->
+        <!-- <ul>
           <li><a href="/index.php/index/index/index.html">返回首页</a></li>
           <li><a href="/index.php/index/index/about.html?type=1">关于我们</a></li>
           <li><a href="/index.php/index/index/about.html?type=3">联系我们</a></li>
-        </ul>
+        </ul> -->
       </div>
       <div class="login-container ">
-        <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form loginForm" auto-complete="on" label-position="left">
+        <div class="change-box">
+          <div id="titleUnit" class="titleUnit">
+            <div class="unite" :class="formState==='account'?'current':''" name="username" @click="toggle('account')"><h3 class="title">用户名登录</h3></div>
+            <div class="unite" :class="formState==='phone'?'current':''" name="tel" @click="toggle('phone')"><h3 class="title">手机号登录</h3></div>
+          </div>
+        </div>
+        <el-form v-show="formState==='account'" ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form loginForm" auto-complete="on" label-position="left">
 
           <!-- <div class="title-container">
           <h3 class="title">Login Form</h3>
@@ -28,7 +37,7 @@
             <el-input
               ref="phone"
               v-model="loginForm.phone"
-              placeholder="手机号码"
+              placeholder="手机号码/用户名称"
               name="phone"
               type="text"
               tabindex="1"
@@ -60,6 +69,7 @@
 
           <p class="foot-p">
             <a target="_blank" @click.prevent="register()">注册</a>
+            <a target="_blank" style="margin-left:20px" @click.prevent="resetting()">忘记密码</a>
           </p>
           <!-- <div class="tips">
           <span style="margin-right:20px;">username: admin</span>
@@ -67,19 +77,62 @@
         </div> -->
 
         </el-form>
+        <el-form v-show="formState==='phone'" ref="phoneForm" :model="phoneForm" :rules="phoneRules" class="login-form loginForm" auto-complete="on" label-position="left">
+          <br><br><br>
+          <el-form-item prop="phone">
+            <span class="svg-container">
+              <svg-icon icon-class="user" />
+            </span>
+            <el-input
+              ref="phone"
+              v-model="phoneForm.phone"
+              placeholder="手机号码"
+              name="phone"
+              type="text"
+              tabindex="1"
+              auto-complete="on"
+            />
+          </el-form-item>
+          <el-form-item prop="smsCaptcha" class="captcha">
+            <span class="svg-container">
+              <svg-icon icon-class="message" />
+            </span>
+            <el-input
+              ref="smsCaptcha"
+              v-model="phoneForm.smsCaptcha"
+              placeholder="手机验证码"
+              name="smsCaptcha"
+              type="text"
+              tabindex="1"
+              auto-complete="on"
+            />
+
+          </el-form-item>
+          <el-button style="margin-bottom:10px;line-height: 30px;" :disabled="smsSetting.smsLoading" @click="getSmsCaptcha">{{ smsSetting.content }}</el-button>
+          <span />
+          <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLoginPhone">登录</el-button>
+
+          <p class="foot-p">
+            <a target="_blank" @click.prevent="register()">注册</a>
+            <a target="_blank" style="margin-left:20px" @click.prevent="resetting()">忘记密码</a>
+          </p>
+        </el-form>
       </div>
     </div>
   </div>
 </template>
 <script>
 import { validPhone } from '@/utils/validate'
+import { getSmsCaptcha } from '@/api/user'
+
 // import axios from 'axios'
 export default {
   name: 'Login',
   data() {
     const validatePhone = (rule, value, callback) => {
-      if (!validPhone(value)) {
-        callback(new Error('请确认手机号码是否正确'))
+    //   if (!validPhone(value)) {
+      if (!value || value.length > 20) {
+        callback(new Error('请确认手机号码或用户名称是否正确'))
       } else {
         callback()
       }
@@ -96,13 +149,28 @@ export default {
         phone: '',
         password: ''
       },
+      phoneForm: {
+        phone: '',
+        smsCaptcha: ''
+      },
       loginRules: {
         phone: [{ required: true, trigger: 'blur', validator: validatePhone }],
         password: [{ required: true, trigger: 'blur', validator: validatePassword }]
       },
+      phoneRules: {
+        phone: [{ required: true, trigger: 'blur', validator: validatePhone }],
+        smsCaptcha: [{ required: true, trigger: 'blur', message: '请输入短信验证码' },
+          { min: 6, max: 6, message: '请输入正确的短信验证码', trigger: 'blur' }]
+      },
       loading: false,
       passwordType: 'password',
-      redirect: undefined
+      redirect: undefined,
+      formState: 'account',
+      smsSetting: {
+        smsLoading: false,
+        content: '获取验证码',
+        cutTime: 60
+      }
     }
   },
   watch: {
@@ -127,12 +195,14 @@ export default {
     register() {
       this.$router.push({ path: 'register' })
     },
+    resetting() {
+      this.$router.push({ path: 'resetting' })
+    },
     handleLogin() {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
           this.$store.dispatch('user/login', this.loginForm).then((res) => {
-            console.log(res)
             if (res.role === 'customer') {
               this.$router.push({ path: '/home/home' })
             } else {
@@ -161,6 +231,67 @@ export default {
           return false
         }
       })
+    },
+    handleLoginPhone() {
+      this.$refs.phoneForm.validate(valid => {
+        if (valid) {
+          this.loading = true
+          this.$store.dispatch('user/phoneLogin', this.phoneForm).then((res) => {
+            if (res.role === 'customer') {
+              this.$router.push({ path: '/home/home' })
+            } else {
+              this.$router.push({ path: '/order/controller' })
+            }
+            this.loading = false
+          }).catch((msg) => {
+            this.$message.error(msg)
+            this.loading = false
+          })
+        } else {
+          console.log('error submit!!')
+          return false
+        }
+      })
+    },
+    toggle(val) {
+      this.formState = val
+    },
+    getSmsCaptcha() {
+      if (this.validatePhone(this.phoneForm.phone)) {
+        this.smsSetting.smsLoading = true
+        this.smsSetting.content = this.smsSetting.cutTime + 's后获取'
+        const clock = window.setInterval(() => {
+          this.smsSetting.cutTime--
+          this.smsSetting.content = this.smsSetting.cutTime + 's后获取'
+          if (this.smsSetting.cutTime < 0) {
+            window.clearInterval(clock)
+            this.smsSetting.content = '获取验证码'
+            this.smsSetting.cutTime = 60
+            this.smsSetting.smsLoading = false
+          }
+        }, 1000)
+        getSmsCaptcha({ phone: this.phoneForm.phone, type: 'universal' }).then(res => {
+          if (res.status === 200) {
+            this.$message({
+              message: '验证短信已下发，请注意查收',
+              type: 'success'
+            })
+          } else {
+            this.$message({
+              message: res.msg,
+              type: 'warning'
+            })
+          }
+        })
+      }
+    },
+    validatePhone(phone) {
+      if (!validPhone(phone)) {
+        this.$message.error('请确认手机号码是否正确')
+        return false
+      } else {
+        return true
+      }
     }
   }
 }
@@ -227,7 +358,7 @@ button {
 .login_bg {
   width: 100%;
   height: 100%;
-  background: #524e4f url('../../assets/images/login_bg.jpg');
+  background: #524e4f url('../../assets/images/login_bg.png');
   background-size: cover;
 }
 .main {
@@ -463,14 +594,14 @@ a.submit {
 .bottom .fll:nth-of-type(2) a {
   color: #666666;
 }
-.loginForm .titleUnit {
+.change-box .titleUnit {
   width: 100%;
-  height: 30px;
+  height: 45px;
   margin-bottom: 40px;
 }
 .titleUnit .unite {
   width: 50%;
-  height: 30px;
+  height: 45px;
   position: relative;
   float: left;
   cursor: pointer;
@@ -481,7 +612,7 @@ a.submit {
   height: 20px;
   background-color: #cbcbcb;
   position: absolute;
-  top: 0px;
+  top: 15px;
   right: 0px;
 }
 
@@ -510,15 +641,23 @@ a.submit {
 .foot-p a{
     color: #2a6496;
 }
+.change-box{
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 25px 35px 0;
+    z-index: 999;
+    width: 410px;
+}
 </style>
 
 <style lang="scss">
 /* 修复input 背景不协调 和光标变色 */
 /* Detail see https://github.com/PanJiaChen/vue-element-admin/pull/927 */
 
-$bg:#283443;
+$bg:#fff;
 $light_gray:#fff;
-$cursor: #fff;
+$cursor: #283443;
 
 @supports (-webkit-mask: none) and (not (cater-color: $cursor)) {
   .login-container .el-input input {
@@ -528,8 +667,16 @@ $cursor: #fff;
 
 /* reset element-ui css */
 .login-container {
+    .captcha{
+        display: inline-block;
+        width: 65%;
+        position: relative;
+        .el-input{
+            width: 80%;
+        }
+    }
   .el-input {
-    display: inline-block;
+    // display: inline-block;
     height: 47px;
     width: 85%;
 
@@ -539,7 +686,7 @@ $cursor: #fff;
       -webkit-appearance: none;
       border-radius: 0px;
       padding: 12px 5px 12px 15px;
-      color: $bg;
+      color: $cursor;
       height: 47px;
       caret-color: $cursor;
 

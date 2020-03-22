@@ -15,6 +15,18 @@
         <sidebar-item v-for="route in permission_routes" :key="route.path" :item="route" :base-path="route.path" />
       </el-menu>
     </el-scrollbar>
+    <div class="contact-wrapper">
+      <a target="_blank" href="http://wpa.qq.com/msgrd?v=3&uin=414449044&site=qq&menu=yes">
+        <img src="../../../assets/home/qq_qian.png" alt="售前QQ" class="qq_img">
+      </a>
+      <a target="_blank" href="http://wpa.qq.com/msgrd?v=3&uin=345200771&site=qq&menu=yes">
+        <img src="../../../assets/home/qq_hou.png" alt="售后QQ" class="qq_img">
+      </a>
+      <p class="contact-text">手机号码</p>
+      <p class="contact-text">15915967345</p>
+      <p class="contact-text">微信二维码</p>
+      <img src="../../../assets/home/wechat.jpg" alt="微信二维码" class="wechat_img">
+    </div>
   </div>
 </template>
 
@@ -52,3 +64,22 @@ export default {
   }
 }
 </script>
+<style lang="scss" scoped>
+    .contact-wrapper{
+        text-align: center;
+        position: relative;
+        .qq_img{
+            width: 50%;
+            display: block;
+            margin: 0 auto 5px;
+        }
+        .contact-text{
+            color: #fff;
+            font-size: 14px;
+            margin:5px 0 10px;
+        }
+        .wechat_img{
+            width: 50%;
+        }
+    }
+</style>

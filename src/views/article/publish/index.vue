@@ -1,23 +1,33 @@
 <template>
   <div class="app-container documentation-container">
-    <a
-      class="document-btn"
-      target="_blank"
-      href="https://panjiachen.github.io/vue-element-admin-site/"
-      @click.prevent="showModel('platform')"
-    >平台推广</a>
-    <a
-      class="document-btn"
-      target="_blank"
-      href="https://github.com/PanJiaChen/vue-element-admin/"
-      @click.prevent="showModel('medium')"
-    >媒体推广</a>
-    <a
-      class="document-btn"
-      target="_blank"
-      href="https://panjiachen.gitee.io/vue-element-admin-site/zh/"
-      @click.prevent="showModel('question')"
-    >问答推广</a>
+    <h3 class="app-container-title">文章发布</h3>
+    <hr class="app-container-hr">
+    <el-row type="flex" class="row-bg" justify="space-around">
+      <el-col :span="5">
+        <div class="box">
+          <img src="@/assets/home/platform.jpg" alt="平台推广" style="width: 100%;">
+          <div class="btn-box">
+            <el-button type="warning" plain @click.prevent="showModel('platform')">发布</el-button>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="5">
+        <div class="box">
+          <img src="@/assets/home/medium.jpg" alt="平台推广" style="width: 100%;">
+          <div class="btn-box">
+            <el-button type="warning" plain @click.prevent="showModel('medium')">发布</el-button>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="5">
+        <div class="box">
+          <img src="@/assets/home/question.jpg" alt="平台推广" style="width: 100%;">
+          <div class="btn-box">
+            <el-button type="warning" plain @click.prevent="showModel('question')">发布</el-button>
+          </div>
+        </div>
+      </el-col>
+    </el-row>
     <el-dialog title="选择类型" :visible.sync="model" width="30%">
       <div class="dialog-center">
         <router-link v-if="dept==='platform'" to="copy-write-platform">
@@ -40,10 +50,6 @@
         </router-link>
       </div>
 
-      <!-- <div slot="footer" class="dialog-footer">
-        <el-button @click="model = false">取 消</el-button>
-        <el-button type="primary" @click="model = false">确 定</el-button>
-      </div> -->
     </el-dialog>
   </div>
 </template>
@@ -51,6 +57,7 @@
 <script>
 // import axios from 'axios'
 // import { test } from '@/api/setting'
+import { getCustInfo } from '@/api/user'
 export default {
   name: 'Publish',
   data() {
@@ -60,9 +67,31 @@ export default {
     }
   },
   methods: {
-    showModel(s) {
-      this.model = true
-      this.dept = s
+    async showModel(s) {
+      if (this.$store.state.user.roles[0] === 'customer') {
+        await getCustInfo().then(res => {
+          const data = res.data
+          if (!data.name || !data.qq || !data.channel) {
+            this.$confirm('为了保障您能正常使用系统，请先前往完善资料。', '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }).then(() => {
+              this.$router.push(`/user/user`)
+            }).catch(() => {
+              return
+            })
+          } else {
+            this.model = true
+            this.dept = s
+          }
+        })
+      } else {
+        this.$message({
+          message: '仅限客户账号下单',
+          type: 'warning'
+        })
+      }
     },
     nothing() {
       this.$message({
@@ -75,41 +104,17 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.documentation-container {
-  margin: 50px;
-  .document-btn {
-    // float: left;
-    margin: 50px auto 0;
-    display: block;
-    cursor: pointer;
-    // background: black;
-    // background-image: linear-gradient( 135deg, #3B2667 10%, #BC78EC 100%);
-    color: white;
-    height: 60px;
-    width: 200px;
-    line-height: 60px;
-    font-size: 20px;
+.row-bg{
+    margin-top: 100px;
+}
+.box{
+    position: relative;
+}
+.btn-box{
+    position: absolute;
+    bottom: 14%;
     text-align: center;
-    border-radius: 10px;
-  }
-  .document-btn:first-child {
-//       background: #4B79A1;  /* fallback for old browsers */
-// background: -webkit-linear-gradient(to right, #283E51, #4B79A1);  /* Chrome 10-25, Safari 5.1-6 */
-// background: linear-gradient(to right, #283E51, #4B79A1); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-background: #4169e1c9;
-  }
-  .document-btn:nth-child(2){
-//       background: #1D4350;  /* fallback for old browsers */
-// background: -webkit-linear-gradient(to right, #A43931, #1D4350);  /* Chrome 10-25, Safari 5.1-6 */
-// background: linear-gradient(to right, #A43931, #1D4350); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-background: #4169e1c9;
-  }
-  .document-btn:nth-child(3){
-//     background: #000428; /* fallback for old browsers */
-//   background: -webkit-linear-gradient(to right, #000428, #004e92); /* Chrome 10-25, Safari 5.1-6 */
-//   background: linear-gradient(to right, #000428, #004e92); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
-background: #4169e1c9;
-  }
+    width: 100%;
 }
 .dialog-center{
     text-align: center;

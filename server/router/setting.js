@@ -32,9 +32,21 @@ router
 
   .get('/getLastPublic', settingController.getLastPublic)
   .post('/addPublic', settingController.addPublic)
+  .get('/getTips', settingController.getTips)
+  .post('/addTips', settingController.addTips)
 
   .get('/getCustomer', settingController.getCustomer)
   .post('/updateCust', settingController.updateCust)
 
+  .post('/updatePass', settingController.updatePass)
+
+  .get('/getDot', settingController.getDot)
+  .post('/changeFirstTime', settingController.changeFirstTime)
+
+  // 广告管理
+  .get('/getAllAd', settingController.getAllAd)
+  .post('/addAd', settingController.addAd)
+  .post('/changeAd', settingController.changeAd)
+  .get('/getAdList', settingController.getAdList)
 module.exports = router
 

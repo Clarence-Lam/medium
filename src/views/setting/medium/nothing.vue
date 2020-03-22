@@ -1,6 +1,7 @@
 <template>
   <div class="app-container">
-    <h3 style="padding-left: 20px;">媒体推广配置</h3>
+    <h3 class="app-container-title">媒体代写配置</h3>
+    <hr class="app-container-hr">
     <div class="nothing-box">
       <p class="nothing-inline">字数/金额：</p>
       <div class="nothing-inline">
@@ -18,7 +19,7 @@
             <template slot="append">字数</template>
           </el-input>
           -
-          <el-input v-model.number="moneyValue" placeholder="金额" style="width:130px" size="mini" @keyup.enter.native="addNum">
+          <el-input v-model="moneyValue" placeholder="金额" style="width:130px" size="mini" oninput="value=value.replace(/[^\d.]/g,'')" @keyup.enter.native="addNum">
             <template slot="append">元</template>
           </el-input>
           <el-button size="mini" type="success" icon="el-icon-check" circle @click="addNum" />
@@ -122,7 +123,10 @@ export default {
     addNum() {
       const numValue = this.numValue
       const moneyValue = this.moneyValue
-      if (numValue && moneyValue !== 0 && typeof (moneyValue) === 'number' && moneyValue > 0) {
+      const pattern = /^\d+(\.\d{0,2})?$/
+      const re = new RegExp(pattern)
+      if (numValue && moneyValue !== 0 && moneyValue > 0 && re.test(moneyValue)) {
+        //   if (numValue && moneyValue !== 0 && typeof (moneyValue) === 'number' && moneyValue > 0) {
         // this.num.push({ num: numValue, money: moneyValue })
         const params = {
           num: numValue,
@@ -136,6 +140,11 @@ export default {
             type: 'success'
           })
           this.getNothing()
+        })
+      } else {
+        this.$message({
+          message: '请确认字数和金额是否正确，金额保留2位小数',
+          type: 'warning'
         })
       }
       this.numVisible = false

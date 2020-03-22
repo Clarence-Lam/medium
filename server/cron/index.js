@@ -6,9 +6,9 @@ const CronController = require('../controller/cron')
 
 // 定义规则
 const rule = new schedule.RecurrenceRule()
-rule.hour = 21
-rule.minute = 54
-rule.second = 5
+rule.hour = 1
+rule.minute = 0
+rule.second = 0
 
 // 启动任务
 const job = schedule.scheduleJob(rule, () => {

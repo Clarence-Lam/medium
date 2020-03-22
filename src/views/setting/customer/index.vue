@@ -1,11 +1,20 @@
 <template>
   <div class="app-container">
-    <h3 style="padding-left: 20px;">客户管理</h3>
-    <div class="search-box">
+    <h3 class="app-container-title">客户管理</h3>
+    <hr class="app-container-hr">
+    <!-- <div class="search-box">
       <el-input v-model="customerName" placeholder="请输入内容" class="input-with-select">
         <template slot="prepend">用户名</template>
         <el-button slot="append" icon="el-icon-search" @click="getList" />
       </el-input>
+    </div> -->
+    <div class="filter-container">
+      <el-input v-model="customerName" placeholder="用户名" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-input v-model="phone" placeholder="手机号码" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-input v-model="QQ" placeholder="QQ" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
+      <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleFilter">
+        搜索
+      </el-button>
     </div>
     <el-table
       :key="0"
@@ -57,9 +66,8 @@
         </template>
       </el-table-column>
       <el-table-column label="余额" prop="money" align="center">
-        <template>
-          <!-- <span>{{ scope.row.money }}</span> -->
-          <span>充值待完善</span>
+        <template slot-scope="scope">
+          <span>{{ scope.row.money }}</span>
         </template>
       </el-table-column>
       <el-table-column label="状态" prop="status" align="center">
@@ -70,6 +78,11 @@
       <el-table-column label="会员等级" prop="level" align="center">
         <template slot-scope="scope">
           <span>{{ getLevel(scope.row.level) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="备注" prop="mark" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.mark }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" width="230" class-name="small-padding fixed-width">
@@ -164,11 +177,41 @@
         <el-button type="primary" @click="changeMark">确 定</el-button>
       </div>
     </el-dialog>
+    <!-- 资金调整弹窗 -->
+    <el-dialog title="收货地址" :visible.sync="moneyFormVisible">
+      <el-form ref="moneyForm" :model="moneyForm" :inline="true" class="moneyForm" :rules="moneyRules">
+        <el-form-item label="操作" label-width="80px" prop="way">
+          <el-select v-model="moneyForm.way" placeholder="请选择活动区域">
+            <el-option label="充值" value="add" />
+            <el-option label="消费" value="sub" />
+            <el-option label="提现" value="cash" />
+            <el-option label="赠送" value="gift" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="操作金额" label-width="80px" prop="money">
+          <el-input v-model.number="moneyForm.money" autocomplete="off" type="number" />
+        </el-form-item>
+        <el-form-item v-if="moneyForm.way === 'cash'" label="真实姓名" label-width="80px" prop="name">
+          <el-input v-model="moneyForm.name" autocomplete="off" />
+        </el-form-item>
+        <el-form-item v-if="moneyForm.way === 'cash'" label="支付宝" label-width="80px">
+          <el-input v-model="moneyForm.alipay" autocomplete="off" />
+        </el-form-item>
+        <el-form-item v-if="moneyForm.way === 'cash'" label="备注" label-width="80px">
+          <el-input v-model="moneyForm.mark" autocomplete="off" style="width:500px" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="moneyFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="resetMoneyForm()">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 <script>
 import Pagination from '@/components/Pagination'
 import { getCustomer, updateCust } from '@/api/setting'
+import { changeMoney } from '@/api/finance'
 
 export default {
   components: { Pagination },
@@ -182,6 +225,8 @@ export default {
       },
       total: 0,
       customerName: '',
+      phone: '',
+      QQ: '',
       custInfo: false,
       infoForm: {
         name: '',
@@ -200,6 +245,30 @@ export default {
       markVisible: false,
       markForm: {
         mark: ''
+      },
+      moneyFormVisible: false,
+      moneyForm: {
+        way: 'add',
+        money: null,
+        name: '',
+        alipay: '',
+        mark: ''
+      },
+      moneyRules: {
+        money: [
+          { required: true, message: '请输入金额', trigger: 'blur' },
+          { type: 'number', message: '金额必须为数字值' }
+        ],
+        way: [
+          { required: true, message: '请选择操作', trigger: 'change' }
+        ],
+        name: [
+          { min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur' }
+        ]
+      },
+      changeRow: {
+        customer_id: '',
+        customer_name: ''
       }
     }
   },
@@ -222,9 +291,13 @@ export default {
       }
       return item[val]
     },
+    handleFilter() {
+      this.listQuery.page = 1
+      this.getList()
+    },
     getList() {
       this.loading = true
-      getCustomer({ name: this.customerName }).then(res => {
+      getCustomer({ name: this.customerName, phone: this.phone, QQ: this.QQ, page: this.listQuery.page }).then(res => {
         this.tableData = res.data
         this.total = res.num
         this.loading = false
@@ -246,16 +319,24 @@ export default {
       })
     },
     changeMoney(row) {
-      this.$notify.error({
-        // title: '错误',
-        message: '充值功能完成后完善'
-      })
+      // 资金调整可分为增加、减少、提现
+      this.moneyFormVisible = true
+      this.changeRow.customer_id = row.id
+      this.changeRow.customer_name = row.name
     },
     showStatement(row) {
-      this.$notify.error({
-        // title: '错误',
-        message: '充值功能完成后完善'
-      })
+    //   this.$notify.error({
+    //     // title: '错误',
+    //     message: '充值功能完成后完善'
+    //   })
+      this.$router.push(
+        {
+          name: 'finance-cust',
+          params: {
+            customer_id: row.id
+          }
+        }
+      )
     },
     toggleStatus(row) {
       const infoForm = {}
@@ -298,6 +379,42 @@ export default {
         })
         this.getList()
       })
+    },
+    resetMoneyForm() {
+      this.$refs['moneyForm'].validate((valid) => {
+        if (valid) {
+          if (this.moneyForm.money < 0) {
+            this.$message({
+              message: '金额必须为正数',
+              type: 'warning'
+            })
+            return
+          }
+          const params = {
+            customer_id: this.changeRow.customer_id,
+            customer_name: this.changeRow.customer_name,
+            type: this.moneyForm.way,
+            money: this.moneyForm.money,
+            real_name: this.moneyForm.name,
+            alipay: this.moneyForm.alipay,
+            mark: this.moneyForm.mark
+          }
+          this.loading = true
+          this.moneyFormVisible = false
+          changeMoney(params).then(res => {
+            this.loading = false
+            this.$message({
+              message: res.msg,
+              type: 'success'
+            })
+            this.$refs['moneyForm'].resetFields()
+            this.getList()
+          })
+        } else {
+          console.log('error submit!!')
+          return false
+        }
+      })
     }
   }
 }
@@ -308,6 +425,12 @@ export default {
 }
 .search-box{
     margin: 20px 0;
-    width: 300px;
+    /* width: 300px; */
+}
+/* .moneyForm .el-form-item{
+    width: 45%;
+} */
+.moneyForm /deep/.el-form-item__content{
+    width: 200px;
 }
 </style>

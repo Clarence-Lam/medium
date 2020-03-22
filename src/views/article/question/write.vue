@@ -1,6 +1,8 @@
 <template>
   <div>
     <div class="components-container">
+      <h3 class="app-container-title">问答推广代写</h3>
+      <hr class="app-container-hr">
       <div>
         <el-form ref="orderForm" :model="form" :rules="rules">
           <el-form-item label="上传：">
@@ -12,7 +14,7 @@
               :on-error="uploadError"
               :on-progress="toUpload"
               :disabled="disabled"
-              accept=".docx"
+              accept=".docx,.doc"
             >
               <el-button size="small" type="primary" :loading="uploading">上传文档，支持DOCX格式，office2007,2010,2013,2016</el-button>
             </el-upload>
@@ -24,15 +26,16 @@
               <el-radio label="7">7天</el-radio> -->
               <el-radio v-for="item of expectedTime" :key="item.label" :label="item.label">{{ item.name }}</el-radio>
             </el-radio-group>
+            <span style="margin-left:10px;color:red">(注：以实际完成时间为准)</span>
           </el-form-item>
-          <el-form-item label="项目名称：" prop="name">
+          <el-form-item label="标题：" prop="name">
             <el-input v-model="form.name" style="width:300px" />
           </el-form-item>
           <tinymce ref="setContent" v-model="content" :height="300" />
 
           <el-form-item label="数量：" style="margin-top:20px">
             <!-- <el-input v-model.number="form.num" style="width:300px" /> -->
-            <el-input-number v-model="form.num" :min="1" label="代写数量" />
+            <el-input-number v-model="form.num" :min="1" label="代写数量" :step="1" step-strictly />
           </el-form-item>
           <el-form-item label="字数：" style="margin-top:20px" prop="money">
             <el-select v-model="form.money" placeholder="请选择">
@@ -57,7 +60,8 @@
           <el-form-item label="备注：" style="margin-top:20px">
             <el-input v-model="form.mark" style="width:300px" />
           </el-form-item>
-          <el-form-item style="margin-top: 4%;">
+          <el-form-item style="margin-top: 4%;" class="write-footer">
+            <el-checkbox v-model="checked" border>是否跟发布一并下单（选择平台）</el-checkbox>
             <el-button type="success" style="float:right" @click="onSubmit">下一步</el-button>
             <el-button type="success" style="float:right;margin-right:20px" @click="showDetail">预览</el-button>
           </el-form-item>
@@ -68,7 +72,7 @@
     <div class="footer">
       <div style="margin: 23px;text-align:center">
         <p style="color:#ddd">金额：<span style="color:#F37B1D">{{ form.money?formatMoney(form.money)[1]*form.num:0 }}</span></p>
-        <p style="font-size:13px;">计算规则：数量 × 字数</p>
+        <p style="font-size:13px;">计算规则：数量 × 字数，可用余额:{{ usableMoney }}</p>
       </div>
     </div>
   </div>
@@ -78,12 +82,17 @@
 import Tinymce from '@/components/Tinymce'
 import { getNothing, getExpectedTime } from '@/api/setting.js'
 import { addOrder } from '@/api/orders'
+import { getUsableMoney } from '@/api/finance'
+import { getCustInfo } from '@/api/user'
 
 export default {
   name: 'TinymceDemo',
   components: { Tinymce },
   data() {
     return {
+      dept: 'question',
+      checked: false,
+      usableMoney: 0,
       uploading: false,
       disabled: false,
       expectedTime: [],
@@ -99,7 +108,7 @@ export default {
       numList: [],
       articleList: [],
       rules: {
-        time: [{ required: true, message: '请选择制作时间', trigger: 'change' }],
+        time: [{ message: '请选择制作时间', trigger: 'change' }],
         name: [{ required: true, message: '请输入文案名称', trigger: 'blur' },
           { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }],
         money: [
@@ -129,13 +138,31 @@ export default {
   },
   created() {
     this.getExpectedTime()
-    if (this.$route.params.goback) {
-      this.form.name = this.$store.state.title
-      this.form.time = this.$store.state.time
-      this.form.mark = this.$store.state.mark
-      this.content = this.$store.state.url
-    }
+    this.getUsableMoney()
     this.getType()
+    if (this.$route.params.goback) {
+      this.form.name = this.$store.state.order.togetherForm.title
+      this.form.time = this.$store.state.order.togetherForm.finish_time
+      this.form.mark = this.$store.state.order.togetherForm.mark
+      this.content = this.$store.state.order.togetherForm.url
+      this.form.num = this.$store.state.order.togetherForm.num
+      this.form.type_article = this.$store.state.order.togetherForm.type_article
+      this.checked = true
+    } else if (this.$route.params.repeat) {
+      this.form.name = this.$route.params.row.title
+      this.form.time = this.$route.params.row.time
+      this.form.mark = this.$route.params.row.mark
+      this.content = this.$route.params.row.url
+      this.form.num = this.$route.params.row.num
+      this.form.type_article = this.$route.params.row.type_article
+    } else if (this.$store.state.order.pay === this.dept) {
+      this.form.name = this.$store.state.order.writeForm.title
+      this.form.time = this.$store.state.order.writeForm.finish_time
+      this.form.mark = this.$store.state.order.writeForm.mark
+      this.content = this.$store.state.order.writeForm.url
+      this.form.num = this.$store.state.order.writeForm.num
+      this.form.type_article = this.$store.state.order.writeForm.type_article
+    }
   },
   methods: {
     formatNum(item) {
@@ -145,39 +172,93 @@ export default {
       const arr = str.split('字/')
       if (arr.length === 2) {
         const array = arr[1].split('元')[0]
-        return [parseInt(arr[0]), parseInt(array)]
+        return [parseFloat(arr[0]), parseFloat(array)]
       }
       return [0, 0]
     },
-    onSubmit() {
-      this.$refs['orderForm'].validate((valid) => {
-        if (valid) {
-          const form = {
-            title: this.form.name,
-            finish_time: this.form.time,
-            mark: this.form.mark,
-            url: this.content,
-            dept: 'question',
-            num: this.form.num,
-            money: this.formatMoney(this.form.money)[1] * this.form.num,
-            type_article: this.form.type_article,
-            sign: 'write',
-            work_nunber: this.formatMoney(this.form.money)[0]
+    async onSubmit() {
+      if (this.$store.state.user.roles[0] === 'customer') {
+        await getCustInfo().then(res => {
+          const data = res.data
+          if (!data.name || !data.qq || !data.channel) {
+            this.$confirm('为了保障您能正常使用系统，请先前往完善资料。', '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }).then(() => {
+              this.$router.push(`/user/user`)
+            }).catch(() => {
+              return
+            })
+          } else {
+            this.$refs['orderForm'].validate((valid) => {
+              if (valid) {
+                const form = {
+                  title: this.form.name,
+                  finish_time: this.form.time,
+                  mark: this.form.mark,
+                  url: this.content,
+                  dept: 'question',
+                  num: this.form.num,
+                  money: this.formatMoney(this.form.money)[1] * this.form.num,
+                  type_article: this.form.type_article,
+                  sign: 'write',
+                  work_nunber: this.formatMoney(this.form.money)[0]
+                }
+
+                if (this.checked) {
+                  const router = {
+                    platform: 'copy-write-platform',
+                    medium: 'copy-write-medium',
+                    question: 'copy-write-question'
+                  }
+                  this.$store.state.order.togetherForm = form
+                  //   console.log(this.$store.state.order.togetherForm)
+                  this.$router.push(
+                    {
+                      name: router[this.dept],
+                      params: {
+                        orderTogether: true
+                      }
+                    }
+                  )
+                } else {
+                  this.$confirm('此操作将扣除金额并下单，是否继续?', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '返回修改',
+                    type: 'warning'
+                  }).then(() => {
+                    addOrder({ form }).then(res => {
+                      if (res.status === 200) {
+                        this.$store.state.order.pay = null
+                        this.$message({
+                          message: '成功创建订单',
+                          type: 'success'
+                        })
+                        this.$router.push('/myOrder/my')
+                      } else if (res.status === 400) {
+                        this.goToPay(form)
+                      } else {
+                        this.$message.error(res.msg)
+                      }
+                    })
+                  }).catch(() => {
+                    console.log('取消')
+                  })
+                }
+              } else {
+                console.log('error submit!!')
+                return false
+              }
+            })
           }
-          addOrder({ ...form }).then(res => {
-            if (res.status === 200) {
-              this.$message({
-                message: '成功创建订单',
-                type: 'success'
-              })
-              this.$router.push('/myOrder/my')
-            }
-          })
-        } else {
-          console.log('error submit!!')
-          return false
-        }
-      })
+        })
+      } else {
+        this.$message({
+          message: '仅限客户账号下单',
+          type: 'warning'
+        })
+      }
     },
     uploadSuccess(response, file, fileList) {
       this.uploading = false
@@ -220,6 +301,30 @@ export default {
       getNothing({ dept: 'question' }).then(res => {
         this.numList = res.num
         this.articleList = res.genre
+        if (this.$route.params.repeat) {
+          const money = this.$route.params.row.money / this.$route.params.row.num
+          for (const item of this.numList) {
+            if (item.money === money) {
+              this.form.money = this.formatNum(item)
+            }
+          }
+        } else if (this.$route.params.goback) {
+          const money = this.$store.state.order.togetherForm.money / this.$store.state.order.togetherForm.num
+
+          for (const item of this.numList) {
+            if (item.money === money) {
+              this.form.money = this.formatNum(item)
+            }
+          }
+        } else if (this.$store.state.order.pay === this.dept) {
+          const money = this.$store.state.order.writeForm.money / this.$store.state.order.writeForm.num
+
+          for (const item of this.numList) {
+            if (item.money === money) {
+              this.form.money = this.formatNum(item)
+            }
+          }
+        }
       })
     },
     getExpectedTime() {
@@ -234,6 +339,24 @@ export default {
             this.form.time = item.name.split('天')[0]
           }
         }
+      })
+    },
+    getUsableMoney() {
+      getUsableMoney().then(res => {
+        this.usableMoney = res.account
+      })
+    },
+    goToPay(form) {
+      this.$confirm('您的金额不足，无法完成下单，点击确定将为您保存订单信息并前往充值?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.$store.state.order.pay = this.dept
+        this.$store.state.order.writeForm = form
+        this.$router.push({ name: 'pay' })
+      }).catch(() => {
+        console.log('取消')
       })
     }
   }
@@ -253,4 +376,22 @@ export default {
     background: #4795C5;
     z-index: -999;
 }
+</style>
+<style lang="scss">
+    .write-footer{
+        .el-checkbox.is-bordered.is-checked{
+            border-color: #13ce66;
+        }
+        .el-checkbox__input.is-checked .el-checkbox__inner{
+            background-color: #13ce66;
+            border-color: #13ce66;
+        }
+        .el-checkbox__label{
+            color: #ffffff;
+        }
+        .el-checkbox__input.is-checked + .el-checkbox__label{
+            color: #13ce66;
+        }
+
+    }
 </style>

@@ -1,5 +1,7 @@
 <template>
   <div class="components-container">
+    <h3 class="app-container-title">媒体推广发布</h3>
+    <hr class="app-container-hr">
     <div>
       <el-form ref="orderForm" :model="form" :rules="rules">
         <el-form-item label="上传：">
@@ -11,7 +13,7 @@
             :on-error="uploadError"
             :on-progress="toUpload"
             :disabled="disabled"
-            accept=".docx"
+            accept=".docx,.doc"
           >
             <el-button size="small" type="primary" :loading="uploading">上传文档，支持DOCX格式，office2007,2010,2013,2016</el-button>
           </el-upload>
@@ -23,8 +25,9 @@
             <el-radio label="7">7天</el-radio> -->
             <el-radio v-for="item of expectedTime" :key="item.label" :label="item.label">{{ item.name }}</el-radio>
           </el-radio-group>
+          <span style="margin-left:10px;color:red">(注：以实际完成时间为准)</span>
         </el-form-item>
-        <el-form-item label="项目名称：" prop="name">
+        <el-form-item label="标题：" prop="name">
           <el-input v-model="form.name" style="width:300px" />
         </el-form-item>
         <tinymce ref="setContent" v-model="content" :height="300" />
@@ -33,7 +36,8 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" style="float:right" @click="onSubmit">下一步</el-button>
-          <el-button type="primary" style="float:right;margin-right:20px" @click="showDetail">预览</el-button>
+          <el-button type="primary" style="float:right;margin:0 20px 0" @click="showDetail">预览</el-button>
+          <el-button v-if="this.$route.params.orderTogether" type="warning" style="float:right" @click="goBack">上一步</el-button>
         </el-form-item>
       </el-form>
 
@@ -43,12 +47,14 @@
 <script>
 import Tinymce from '@/components/Tinymce'
 import { getExpectedTime } from '@/api/setting'
+import { getCustInfo } from '@/api/user'
 
 export default {
   name: 'TinymceDemo',
   components: { Tinymce },
   data() {
     return {
+      dept: 'medium',
       uploading: false,
       disabled: false,
       expectedTime: [],
@@ -58,7 +64,7 @@ export default {
         mark: ''
       },
       rules: {
-        time: [{ required: true, message: '请选择制作时间', trigger: 'change' }],
+        time: [{ message: '请选择制作时间', trigger: 'change' }],
         name: [{ required: true, message: '请输入文案名称', trigger: 'blur' },
           { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }]
       },
@@ -85,30 +91,64 @@ export default {
       this.form.time = this.$store.state.time
       this.form.mark = this.$store.state.mark
       this.content = this.$store.state.url
+    } else if (this.$route.params.repeat) {
+      this.form.name = this.$route.params.row.title
+      this.form.time = this.$route.params.row.time
+      this.form.mark = this.$route.params.row.mark
+      this.content = this.$route.params.row.url
+    } else if (this.dept === this.$store.state.order.pay) {
+      this.form.name = this.$store.state.order.cpWriteForm.title
+      this.form.time = this.$store.state.order.cpWriteForm.time
+      this.form.mark = this.$store.state.order.cpWriteForm.mark
+      this.content = this.$store.state.order.cpWriteForm.url
     }
   },
   methods: {
-    onSubmit() {
-      this.$refs['orderForm'].validate((valid) => {
-        if (valid) {
-        //   this.addOrder()
-          this.$store.state.title = this.form.name
-          this.$store.state.time = this.form.time
-          this.$store.state.mark = this.form.mark
-          this.$store.state.url = this.content
-          this.$router.push(
-            {
-              name: 'commit',
-              params: {
-                dept: 'medium'
+    async onSubmit() {
+      if (this.$store.state.user.roles[0] === 'customer') {
+        await getCustInfo().then(res => {
+          const data = res.data
+          if (!data.name || !data.qq || !data.channel) {
+            this.$confirm('为了保障您能正常使用系统，请先前往完善资料。', '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }).then(() => {
+              this.$router.push(`/user/user`)
+            }).catch(() => {
+              return
+            })
+          } else {
+            this.$refs['orderForm'].validate((valid) => {
+              if (valid) {
+              //   this.addOrder()
+                this.$store.state.title = this.form.name
+                this.$store.state.time = this.form.time
+                this.$store.state.mark = this.form.mark
+                this.$store.state.url = this.content
+                this.$router.push(
+                  {
+                    name: 'commit',
+                    params: {
+                      dept: 'medium',
+                      isSelection: this.$route.params.isSelection ? this.$route.params.isSelection : false,
+                      orderTogether: this.$route.params.orderTogether ? this.$route.params.orderTogether : false
+                    }
+                  }
+                )
+              } else {
+                console.log('error submit!!')
+                return false
               }
-            }
-          )
-        } else {
-          console.log('error submit!!')
-          return false
-        }
-      })
+            })
+          }
+        })
+      } else {
+        this.$message({
+          message: '仅限客户账号下单',
+          type: 'warning'
+        })
+      }
     },
     uploadSuccess(response, file, fileList) {
       this.uploading = false
@@ -161,6 +201,21 @@ export default {
           }
         }
       })
+    },
+    goBack() {
+      const router = {
+        platform: 'write-platform',
+        medium: 'write-medium',
+        question: 'write-question'
+      }
+      this.$router.push(
+        {
+          name: router[this.dept],
+          params: {
+            goback: true
+          }
+        }
+      )
     }
   }
 }

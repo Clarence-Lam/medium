@@ -9,7 +9,7 @@
       <i v-if="!showMore" class="el-icon-arrow-up commit-icon" @click="showMore=!showMore" />
       <i v-if="showMore" class="el-icon-arrow-down commit-icon" @click="showMore=!showMore" />
       <div class="commit-btn">
-        已选媒体： {{ multipleSelection.length }} 个，金额：{{ Selection }} 元（账户余额：XXX 元 ）
+        已选媒体： {{ multipleSelection.length }} 个，金额：{{ Selection }} 元（可用余额：{{ usableMoney }} 元 ）
         <el-button size="small" @click="cleanAll()">清空</el-button>
         <el-button type="warning" size="small" @click="goBack()">上一步</el-button>
         <el-button type="success" size="small" @click="submit()">提交</el-button>
@@ -19,6 +19,7 @@
 </template>
 <script>
 import CommitTag from '../components/commit-tag'
+import { getUsableMoney } from '@/api/finance'
 export default {
   components: { CommitTag },
   props: {
@@ -33,7 +34,8 @@ export default {
     return {
       showMore: false,
       height: 150,
-      width: undefined
+      width: undefined,
+      usableMoney: 0
     }
   },
   computed: {
@@ -42,7 +44,7 @@ export default {
       let num = 0
       for (const item of this.multipleSelection) {
         // TODO
-        if (this.$store.state.user && this.$store.state.user.level === 1) {
+        if (this.$store.state.user && this.$store.state.user.level === '1') {
           num += item.general_price * item.num
         } else {
           num += item.agent_price * item.num
@@ -59,6 +61,9 @@ export default {
         this.height = 150
       }
     }
+  },
+  created() {
+    this.getUsableMoney()
   },
   mounted() {
     // this.height = this.$el.getBoundingClientRect().height
@@ -80,6 +85,11 @@ export default {
         return
       }
       this.$parent.submit()
+    },
+    getUsableMoney() {
+      getUsableMoney().then(res => {
+        this.usableMoney = res.account
+      })
     }
   }
 }

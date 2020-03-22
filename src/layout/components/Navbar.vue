@@ -1,6 +1,6 @@
 <template>
   <div class="navbar">
-    <hamburger id="hamburger-container" :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
+    <hamburger v-if="!sidebar.opened" id="hamburger-container" :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
 
     <breadcrumb id="breadcrumb-container" class="breadcrumb-container" />
 
@@ -15,12 +15,12 @@
         <!-- <el-tooltip content="Global Size" effect="dark" placement="bottom">
           <size-select id="size-select" class="right-menu-item hover-effect" />
         </el-tooltip> -->
-
+        <message-reminder class="right-menu-item" />
       </template>
 
       <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="click" @command="handleCommand">
         <div class="avatar-wrapper">
-          <span>{{ this.$store.state.user.name }}</span>
+          <span>{{ $store.state.user.name }}</span>
           <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown">
@@ -28,7 +28,7 @@
             <el-dropdown-item>Profile</el-dropdown-item>
           </router-link> -->
           <!-- <router-link to="/"> -->
-          <el-dropdown-item command="show">个人资料</el-dropdown-item>
+          <el-dropdown-item v-if="$store.state.user.roles[0]==='customer'" command="show">个人资料</el-dropdown-item>
           <!-- </router-link> -->
           <!-- <router-link to="/"> -->
           <el-dropdown-item command="change">修改密码</el-dropdown-item>
@@ -46,23 +46,23 @@
       </el-dropdown>
     </div>
     <el-dialog title="个人资料" :visible.sync="personal" :modal-append-to-body="false" width="30%">
-      <el-form :model="form">
-        <el-form-item label="真实姓名" :label-width="'120px'">
+      <el-form ref="form" :model="form" :rules="formRules">
+        <el-form-item label="真实姓名" :label-width="'80px'" prop="name">
           <el-input v-model="form.name" autocomplete="off" />
         </el-form-item>
-        <el-form-item label="手机" :label-width="'120px'">
+        <el-form-item label="手机" :label-width="'80px'" prop="phone">
           <el-input v-model="form.phone" autocomplete="off" />
         </el-form-item>
-        <el-form-item label="邮箱" :label-width="'120px'">
+        <el-form-item label="邮箱" :label-width="'80px'" prop="elmail">
           <el-input v-model="form.elmail" autocomplete="off" />
         </el-form-item>
-        <el-form-item label="QQ" :label-width="'120px'">
+        <el-form-item label="QQ/微信" :label-width="'80px'" prop="qq">
           <el-input v-model="form.qq" autocomplete="off" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="personal = false">取 消</el-button>
-        <el-button type="primary" @click="submit">确 定</el-button>
+        <el-button type="primary" :loading="loading" @click="submit">确 定</el-button>
       </div>
     </el-dialog>
 
@@ -71,18 +71,18 @@
       :visible.sync="drawer"
       :direction="'rtl'"
     >
-      <el-form :model="passForm">
-        <el-form-item label="原密码" :label-width="'120px'">
-          <el-input v-model="passForm.oldPass" autocomplete="off" />
+      <el-form ref="passForm" :model="passForm" :rules="rules">
+        <el-form-item label="原密码" :label-width="'120px'" prop="oldPass">
+          <el-input v-model="passForm.oldPass" autocomplete="off" style="width:80%" />
         </el-form-item>
-        <el-form-item label="新密码" :label-width="'120px'">
-          <el-input v-model="passForm.newPass" autocomplete="off" />
+        <el-form-item label="新密码" :label-width="'120px'" prop="newPass">
+          <el-input v-model="passForm.newPass" autocomplete="off" style="width:80%" />
         </el-form-item>
-        <el-form-item label="确认密码" :label-width="'120px'">
-          <el-input v-model="passForm.pass" autocomplete="off" />
+        <el-form-item label="确认密码" :label-width="'120px'" prop="pass">
+          <el-input v-model="passForm.pass" autocomplete="off" style="width:80%" />
         </el-form-item>
       </el-form>
-      <el-button type="primary" @click="submit">确定</el-button>
+      <el-button type="primary" :loading="loading" class="subBtn" @click="updatePass">确定</el-button>
     </el-drawer>
   </div>
 </template>
@@ -91,6 +91,11 @@
 import { mapGetters } from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
+import MessageReminder from '../components/MessageReminder'
+import { updatePass } from '@/api/setting'
+import { updateInfo, getCustInfo } from '@/api/user'
+import { validPhone, validEmail } from '@/utils/validate'
+
 // import ErrorLog from '@/components/ErrorLog'
 // import Screenfull from '@/components/Screenfull'
 // import SizeSelect from '@/components/SizeSelect'
@@ -99,13 +104,54 @@ import Hamburger from '@/components/Hamburger'
 export default {
   components: {
     Breadcrumb,
-    Hamburger
+    Hamburger,
+    MessageReminder
     // ErrorLog,
     // Screenfull,
     // SizeSelect,
     // Search
   },
   data() {
+    const validatePassword = (rule, value, callback) => {
+      if (value.length < 6) {
+        callback(new Error('至少输入6位数密码'))
+      } else {
+        callback()
+      }
+    }
+    const confirmPass = (rule, value, callback) => {
+      if (value.length < 6) {
+        callback(new Error('至少输入6位数密码'))
+      } else {
+        if (value !== this.passForm.newPass) {
+          callback(new Error('两次密码输入不一致'))
+        } else {
+          callback()
+        }
+      }
+    }
+    const validatePhone = (rule, value, callback) => {
+      if (!validPhone(value)) {
+        callback(new Error('请确认手机号码是否正确'))
+      } else {
+        callback()
+      }
+    }
+    const validateEmail = (rule, value, callback) => {
+      if (!validEmail(value)) {
+        callback(new Error('请确认邮箱是否正确'))
+      } else {
+        callback()
+      }
+    }
+    const validateQQ = (rule, value, callback) => {
+    //   if (!validQQ(value)) {
+      if (value.length < 5 || value.length > 20) {
+        callback(new Error('请确认QQ是否正确'))
+      } else {
+        callback()
+      }
+    }
     return {
       form: {
         name: '',
@@ -119,7 +165,20 @@ export default {
         pass: ''
       },
       personal: false,
-      drawer: false
+      drawer: false,
+      loading: false,
+      rules: {
+        oldPass: [{ required: true, validator: validatePassword, trigger: 'blur' }],
+        newPass: [{ required: true, validator: validatePassword, trigger: 'blur' }],
+        pass: [{ required: true, validator: confirmPass, trigger: 'blur' }]
+      },
+      formRules: {
+        name: [{ required: true, message: '请输入真实姓名', trigger: 'blur' },
+          { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }],
+        phone: [{ required: true, validator: validatePhone, trigger: 'blur' }],
+        elmail: [{ validator: validateEmail, trigger: 'blur' }],
+        qq: [{ validator: validateQQ, trigger: 'blur' }]
+      }
     }
   },
   computed: {
@@ -129,7 +188,9 @@ export default {
       'device'
     ])
   },
-
+  created() {
+    this.getCustInfo()
+  },
   methods: {
     toggleSideBar() {
       this.$store.dispatch('app/toggleSideBar')
@@ -151,12 +212,62 @@ export default {
       }
     },
     submit() {
-      this.$notify.error({
-        title: '信息',
-        message: '功能待完善'
+      this.$refs['form'].validate((valid) => {
+        if (valid) {
+          this.loading = true
+          const params = {
+            name: this.form.name,
+            phone: this.form.phone,
+            elmail: this.form.elmail,
+            qq: this.form.qq
+          }
+          updateInfo(params).then(res => {
+            this.loading = false
+            if (res.status === 200) {
+              this.$message({
+                message: res.msg,
+                type: 'success'
+              })
+              this.personal = false
+              this.getCustInfo()
+              this.$store.dispatch('user/getInfo')
+            } else {
+              this.$message({
+                message: res.msg,
+                type: 'warning'
+              })
+            }
+          })
+        }
       })
-      this.personal = false
-      this.drawer = false
+    },
+    updatePass() {
+      this.$refs['passForm'].validate((valid) => {
+        if (valid) {
+          this.loading = true
+          updatePass({ oldPass: this.passForm.oldPass, newPass: this.passForm.newPass }).then(res => {
+            this.loading = false
+            if (res.status === 200) {
+              this.$message({
+                message: res.msg,
+                type: 'success'
+              })
+              this.drawer = false
+            } else {
+              this.$message({
+                message: res.msg,
+                type: 'warning'
+              })
+            }
+          })
+        }
+      })
+    },
+    getCustInfo() {
+      getCustInfo().then(res => {
+        const data = res.data
+        Object.keys(this.form).forEach(key => { this.form[key] = data[key] || '' })
+      })
     }
   }
 }
@@ -243,5 +354,9 @@ export default {
       }
     }
   }
+}
+.subBtn{
+    float: right;
+    margin-right: 4em;
 }
 </style>

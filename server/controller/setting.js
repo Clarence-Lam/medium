@@ -1,21 +1,26 @@
 const userModel = require('../model/user.js')
 const DBHelper = require('../helper/DBHelper.js')
+const Helper = require('../helper/index.js')
 const SettingModel = require('../model/setting.js')
+const OrderModel = require('../model/orders.js')
 const uuidv1 = require('uuid/v1')
 const moment = require('moment')
 const bcrypt = require('bcrypt')
 const _ = require('lodash')
+const emoji = require('emoji')
 
 const SALT_WORK_FACTOR = 10
 const roles = {
   '管理员': 'admin',
   '技术': 'technology',
-  '客服': 'service'
+  '客服': 'service',
+  '财务': 'finance'
 }
 const depts = {
   '管理员': '管理',
   '技术': '技术部',
-  '客服': '客服部'
+  '客服': '客服部',
+  '财务': '财务部'
 }
 
 class SettingController {
@@ -463,21 +468,53 @@ class SettingController {
     })
   }
 
+  async getTips(ctx) {
+    return DBHelper.getList('account_tips', [0, 1], {}).then(result => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        data: result
+      }
+    })
+  }
+  async addTips(ctx) {
+    const params = {
+      id: uuidv1(),
+      content_type: 'account_tips',
+      content: ctx.request.body.content,
+      created_by: ctx.session.userName,
+      created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+    }
+    await DBHelper.addRow('account_tips', params).then(() => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        msg: '成功创建提示'
+      }
+    })
+  }
+
   async getCustomer(ctx) {
-    const { name } = ctx.query
+    const { name, phone, QQ } = ctx.query
     const pageNum = parseInt(ctx.query.page || 1, 10)// 页码
     const end = 10 // 默认页数
     const start = (pageNum - 1) * end
     const limit = [start, end]
     return Promise.all(
       [
-        userModel.searchCusts({}, { name }, limit),
-        userModel.searchCustsTotal({}, { name }, limit)
-      ]).then(result => {
+        userModel.searchCusts({}, { name, phone, QQ }, limit),
+        userModel.searchCustsTotal({}, { name, phone, QQ }, limit)
+      ]).then(async result => {
+      const res = []
+      for await (const item of result[0]) {
+        const money = await Helper.getUsableMoney(item.id)
+        item['money'] = money
+        res.push(item)
+      }
       ctx.body = {
         status: 200,
         statusText: 'ok',
-        data: result[0],
+        data: res,
         num: result[1][0].count
       }
     })
@@ -495,6 +532,197 @@ class SettingController {
         status: 200,
         statusText: 'ok',
         msg: '更新成功'
+      }
+    })
+  }
+
+  async updatePass(ctx) {
+    const { newPass, oldPass } = ctx.request.body
+    const id = ctx.session.userId
+    return DBHelper.getList('customer', [0, 1], { id }).then(result => {
+      if (result.length > 0) {
+        const item = result[0]
+        const rowID = item.id
+        const hash = item.password
+
+        if (bcrypt.compareSync(oldPass, hash)) {
+          const salt = bcrypt.genSaltSync(SALT_WORK_FACTOR)
+          const pass = bcrypt.hashSync(newPass, salt)
+          const params = {
+            password: pass,
+            updated_by: ctx.session.userName,
+            updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
+          }
+          return DBHelper.updateRow('customer', rowID, params).then(() => {
+            ctx.body = {
+              status: 200,
+              statusText: 'ok',
+              msg: '密码更新成功'
+            }
+          })
+        } else {
+          ctx.body = {
+            status: 201,
+            statusText: 'fail',
+            msg: '原密码输入错误'
+          }
+        }
+      } else {
+        return DBHelper.getList('user', [0, 1], { id }).then(result => {
+          if (result.length > 0) {
+            const item = result[0]
+            const rowID = item.id
+            const hash = item.password
+            if (bcrypt.compareSync(oldPass, hash)) {
+              const salt = bcrypt.genSaltSync(10)
+              const pass = bcrypt.hashSync(newPass, salt)
+              const params = {
+                password: pass,
+                updated_by: ctx.session.userName,
+                updated_time: moment().format('YYYY-MM-DD HH:mm:ss')
+              }
+              return DBHelper.updateRow('user', rowID, params).then(() => {
+                ctx.body = {
+                  status: 200,
+                  statusText: 'ok',
+                  msg: '密码更新成功'
+                }
+              })
+            } else {
+              ctx.body = {
+                status: 201,
+                statusText: 'fail',
+                msg: '原密码输入错误'
+              }
+            }
+          } else {
+            ctx.body = {
+              status: 202,
+              statusText: 'fail',
+              msg: '用户不存在'
+            }
+          }
+        })
+      }
+    })
+  }
+
+  async getDot(ctx) {
+    const role = ctx.session.role
+    if (role === 'customer') {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        data: {
+          showDot: false
+        }
+      }
+    } else {
+      const state = {
+        admin: ['start', 'plan'],
+        service: ['start'],
+        technology: ['plan'],
+        finance: []
+      }
+      await OrderModel.getOrderTableTotal('', state[role]).then(result => {
+        let showDot = false
+        let count = 0
+        if (result[0].count > 0) {
+          showDot = true
+          count = result[0].count
+        }
+        ctx.body = {
+          status: 200,
+          statusText: 'ok',
+          data: {
+            showDot,
+            count
+          }
+        }
+      })
+    }
+  }
+
+  async changeFirstTime(ctx) {
+    if (ctx.session.userId) {
+      return DBHelper.updateRow('customer', ctx.session.userId, { first_time: '0' }).then(() => {
+        ctx.session.firstTime = '0'
+        ctx.body = {
+          status: 200,
+          statusText: 'ok'
+        }
+      })
+    }
+  }
+
+  // 广告管理列表
+  async getAllAd(ctx) {
+    const pageNum = parseInt(ctx.query.page || 1, 10)// 页码
+    const end = 10 // 默认页数
+    const start = (pageNum - 1) * end
+    const limit = [start, end]
+    return Promise.all(
+      [
+        DBHelper.getList('ad', limit, {}),
+        DBHelper.getListTotal('ad', {})
+      ]).then(async result => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        data: result[0],
+        num: result[1][0].count
+      }
+    })
+  }
+
+  async addAd(ctx) {
+    const { content } = ctx.request.body
+    const params = {
+      id: uuidv1(),
+      user_name: ctx.session.userName,
+      user_id: ctx.session.userId,
+      content: emoji.unifiedToHTML(content),
+      created_by: ctx.session.userName,
+      created_time: moment().format('YYYY-MM-DD HH:mm:ss')
+    }
+    return DBHelper.addRow('ad', params).then(() => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok'
+      }
+    })
+  }
+
+  async changeAd(ctx) {
+    const { id, state, end_time } = ctx.request.body
+    if (state === 'audited' && end_time === null) {
+      ctx.body = {
+        status: 201,
+        statusText: 'ok',
+        msg: '下线时间必须选择'
+      }
+    }
+    const params = {
+      state
+    }
+    if (end_time) {
+      params['end_time'] = end_time.split(' ')[0] + ' 23:59:59'
+    }
+    return DBHelper.updateRow('ad', id, params).then(() => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok'
+      }
+    })
+  }
+
+  async getAdList(ctx) {
+    const now_time = moment().format('YYYY-MM-DD HH:mm:ss')
+    return SettingModel.getAdList(now_time).then(result => {
+      ctx.body = {
+        status: 200,
+        statusText: 'ok',
+        data: result
       }
     })
   }

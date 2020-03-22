@@ -2,32 +2,50 @@
   <div class="login_bg">
     <div class="unit">
       <div class="fl_div">
+        <h2>
+          TM媒介
+        </h2>
         <!-- <img src="/static/index/images/login/login.png"> -->
         <div class="line" />
-        <div class="call_tel">
+        <!-- <div class="call_tel">
+          <div class="text">注册咨询热线</div>
           <div class="text">注册咨询热线</div>
           <div class="tel">0754-8888-8888</div>
-        </div>
-        <ul>
+        </div> -->
+        <!-- <ul>
           <li><a href="/index.php/index/index/index.html">返回首页</a></li>
           <li><a href="/index.php/index/index/about.html?type=1">关于我们</a></li>
           <li><a href="/index.php/index/index/about.html?type=3">联系我们</a></li>
-        </ul>
+        </ul> -->
       </div>
       <div class="login-container ">
-        <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form loginForm" auto-complete="on" label-position="left">
+        <el-form ref="registerForm" :model="registerForm" :rules="registerRules" class="login-form registerForm" auto-complete="on" label-position="left">
 
           <!-- <div class="title-container">
           <h3 class="title">Login Form</h3>
         </div> -->
-          <br><br>
-          <el-form-item prop="phone">
+          <el-form-item prop="name">
             <span class="svg-container">
               <svg-icon icon-class="user" />
             </span>
             <el-input
+              ref="name"
+              v-model="registerForm.name"
+              placeholder="账号"
+              name="name"
+              type="text"
+              tabindex="1"
+              auto-complete="on"
+            />
+          </el-form-item>
+          <el-form-item prop="phone">
+            <span class="svg-container">
+              <!-- <svg-icon icon-class="el-icon-phone" /> -->
+              <i class="el-icon-phone" />
+            </span>
+            <el-input
               ref="phone"
-              v-model="loginForm.phone"
+              v-model="registerForm.phone"
               placeholder="手机号码"
               name="phone"
               type="text"
@@ -36,6 +54,23 @@
             />
           </el-form-item>
 
+          <el-form-item prop="smsCaptcha" class="captcha">
+            <span class="svg-container">
+              <svg-icon icon-class="message" />
+            </span>
+            <el-input
+              ref="smsCaptcha"
+              v-model="registerForm.smsCaptcha"
+              placeholder="手机验证码"
+              name="smsCaptcha"
+              type="text"
+              tabindex="1"
+              auto-complete="on"
+            />
+
+          </el-form-item>
+          <el-button style="margin-bottom:10px;line-height: 30px;" :disabled="smsSetting.smsLoading" @click="getSmsCaptcha">{{ smsSetting.content }}</el-button>
+
           <el-form-item prop="password">
             <span class="svg-container">
               <svg-icon icon-class="password" />
@@ -43,9 +78,9 @@
             <el-input
               :key="passwordType"
               ref="password"
-              v-model="loginForm.password"
+              v-model="registerForm.password"
               :type="passwordType"
-              placeholder="Password"
+              placeholder="密码"
               name="password"
               tabindex="2"
               auto-complete="on"
@@ -56,23 +91,62 @@
             </span>
           </el-form-item>
 
-          <el-form-item prop="yanzhengma">
+          <el-form-item prop="passwordConfirmed">
             <span class="svg-container">
-              <svg-icon icon-class="user" />
+              <svg-icon icon-class="password" />
             </span>
             <el-input
-              ref="yanzhengma"
+              :key="passwordType"
+              ref="passwordConfirmed"
+              v-model="registerForm.passwordConfirmed"
+              :type="passwordType"
+              placeholder="密码确认"
+              name="passwordConfirmed"
+              tabindex="2"
+              auto-complete="on"
+              @keyup.enter.native="register"
+            />
+            <span class="show-pwd" @click="showPwd">
+              <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
+            </span>
+          </el-form-item>
+
+          <!-- <el-form-item prop="recommender">
+            <span class="svg-container">
+              <svg-icon icon-class="peoples" />
+            </span>
+            <el-input
+              ref="recommender"
+              v-model="registerForm.recommender"
+              placeholder="推荐人"
+              name="recommender"
+              type="text"
+              tabindex="1"
+              auto-complete="on"
+            />
+          </el-form-item> -->
+
+          <el-form-item prop="svgCaptcha" class="captcha">
+            <span class="svg-container">
+              <svg-icon icon-class="size" />
+            </span>
+            <el-input
+              ref="svgCaptcha"
+              v-model="registerForm.svgCaptcha"
               placeholder="验证码"
-              name="yanzhengma"
+              name="svgCaptcha"
               type="text"
               tabindex="1"
               auto-complete="on"
             />
 
+            <template>
+              <span style="position: absolute;" @click="getSvgCaptcha" v-html="svgCaptcha" />
+            </template>
           </el-form-item>
-          <el-button style="width:100%;margin-bottom:10px;">获取验证码</el-button>
+          <!-- style="margin-bottom:10px;line-height: 30px;" v-html="svgCaptcha" /> -->
           <br>
-          <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="register">注册</el-button>
+          <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:20px;" @click.native.prevent="register">注册</el-button>
 
           <p class="foot-p">
             <a target="_blank" @click.prevent="login()">已有账号，去登录</a>
@@ -89,6 +163,7 @@
 </template>
 <script>
 import { validPhone } from '@/utils/validate'
+import { getSvgCaptcha, getSmsCaptcha, register } from '@/api/user'
 // import axios from 'axios'
 export default {
   name: 'Login',
@@ -107,16 +182,46 @@ export default {
         callback()
       }
     }
+    const confirmPass = (rule, value, callback) => {
+      if (value.length < 6) {
+        callback(new Error('至少输入6位数密码'))
+      } else {
+        if (value !== this.registerForm.password) {
+          callback(new Error('两次密码输入不一致'))
+        } else {
+          callback()
+        }
+      }
+    }
     return {
-      loginForm: {
-        phone: '13510520707',
-        password: '123456'
+      svgCaptcha: '',
+      registerForm: {
+        name: '',
+        phone: '',
+        password: '',
+        smsCaptcha: '',
+        passwordConfirmed: '',
+        svgCaptcha: '',
+        recommender: ''
       },
-      loginRules: {
+      registerRules: {
         phone: [{ required: true, trigger: 'blur', validator: validatePhone }],
-        password: [{ required: true, trigger: 'blur', validator: validatePassword }]
+        name: [{ required: true, trigger: 'blur', message: '请输入账号' }],
+        password: [{ required: true, trigger: 'blur', validator: validatePassword }],
+        passwordConfirmed: [{ required: true, trigger: 'blur', validator: confirmPass }],
+        smsCaptcha: [{ required: true, trigger: 'blur', message: '请输入短信验证码' },
+          { min: 6, max: 6, message: '请输入正确的短信验证码', trigger: 'blur' }],
+        svgCaptcha: [{ required: true, trigger: 'blur', message: '请输入图形验证码' },
+          { min: 4, max: 4, message: '请输入正确的验证码', trigger: 'blur' }],
+        recommender: [{ min: 8, max: 8, message: '请输入正确的推荐人', trigger: 'blur' }]
       },
       loading: false,
+      smsSetting: {
+        smsLoading: false,
+        content: '获取验证码',
+        cutTime: 60
+      },
+
       passwordType: 'password',
       redirect: undefined
     }
@@ -128,6 +233,9 @@ export default {
       },
       immediate: true
     }
+  },
+  created() {
+    this.getSvgCaptcha()
   },
   methods: {
     showPwd() {
@@ -144,34 +252,89 @@ export default {
       this.$router.push({ path: 'login' })
     },
     register() {
-      this.$refs.loginForm.validate(valid => {
+      this.$refs.registerForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('user/login', this.loginForm).then((res) => {
-            this.$router.push({ path: this.redirect || '/' })
+          //   this.$store.dispatch('user/login', this.registerForm).then((res) => {
+          //     this.$router.push({ path: this.redirect || '/' })
+          //     this.loading = false
+          //   }).catch((msg) => {
+          //     this.$message.error(msg)
+          //     this.loading = false
+          //   })
+          const params = {
+            name: this.registerForm.name,
+            phone: this.registerForm.phone,
+            password: this.registerForm.password,
+            smsCaptcha: this.registerForm.smsCaptcha,
+            svgCaptcha: this.registerForm.svgCaptcha,
+            recommender: this.registerForm.recommender
+          }
+          register(params).then(res => {
             this.loading = false
-          }).catch((msg) => {
-            this.$message.error(msg)
+            if (res.status === 200) {
+              this.$message({
+                message: res.msg,
+                type: 'success'
+              })
+              this.login()
+            } else {
+              this.$message({
+                message: res.msg,
+                type: 'warning'
+              })
+            }
+          }).catch(err => {
+            console.log(err)
             this.loading = false
           })
-        //   axios
-        //     .post('/api/register', {
-        //       phone: this.loginForm.phone,
-        //       password: this.loginForm.password,
-        //       name: 'Clarence',
-        //       role: 'admin'
-        //     })
-        //     .then((response) => {
-        //       console.log(response)
-        //     })
-        //     .catch((error) => {
-        //       console.log(error)
-        //     })
         } else {
           console.log('error submit!!')
           return false
         }
       })
+    },
+    getSvgCaptcha() {
+      getSvgCaptcha().then(res => {
+        this.svgCaptcha = res.svg
+      })
+    },
+    getSmsCaptcha() {
+      if (this.validatePhone(this.registerForm.phone)) {
+        this.smsSetting.smsLoading = true
+        this.smsSetting.content = this.smsSetting.cutTime + 's后获取'
+        const clock = window.setInterval(() => {
+          this.smsSetting.cutTime--
+          this.smsSetting.content = this.smsSetting.cutTime + 's后获取'
+          if (this.smsSetting.cutTime < 0) {
+            window.clearInterval(clock)
+            this.smsSetting.content = '获取验证码'
+            this.smsSetting.cutTime = 60
+            this.smsSetting.smsLoading = false
+          }
+        }, 1000)
+        getSmsCaptcha({ phone: this.registerForm.phone, type: 'register' }).then(res => {
+          if (res.status === 200) {
+            this.$message({
+              message: '验证短信已下发，请注意查收',
+              type: 'success'
+            })
+          } else {
+            this.$message({
+              message: res.msg,
+              type: 'warning'
+            })
+          }
+        })
+      }
+    },
+    validatePhone(phone) {
+      if (!validPhone(phone)) {
+        this.$message.error('请确认手机号码是否正确')
+        return false
+      } else {
+        return true
+      }
     }
   }
 }
@@ -238,7 +401,7 @@ button {
 .login_bg {
   width: 100%;
   height: 100%;
-  background: #524e4f url('../../assets/images/login_bg.jpg');
+  background: #524e4f url('../../assets/images/login_bg.png');
   background-size: cover;
 }
 .main {
@@ -252,7 +415,7 @@ button {
 }
 .unit {
   width: 794px;
-  height: 470px;
+  height: 645px;
   position: absolute;
   z-index: 2;
   top: 50%;
@@ -260,7 +423,7 @@ button {
   margin-left: -397px;
   margin-top: -235px; /*background-color: red;transform: translate(-50%, -50%);-webkit-transform: translate(-50%, -50%);-moz-transform: translate(-50%, -50%);-ms-transform: translate(-50%, -50%);-o-transform: translate(-50%, -50%);transform: translate(-50%, -50%);*/
 }
-.loginForm h4.title {
+.registerForm h4.title {
   text-align: center;
   margin-bottom: 30px;
   padding-bottom: 12px;
@@ -268,7 +431,7 @@ button {
   color: #df5151;
   font-size: 18px;
 }
-.loginForm h4.title:before {
+.registerForm h4.title:before {
   content: "";
   width: 30px;
   height: 2px;
@@ -333,7 +496,7 @@ button {
 .fl_div ul li:last-child a:after {
   background-color: transparent;
 }
-.loginForm {
+.registerForm {
   width: 410px;
   height: 100%;
   background-color: #ffffff;
@@ -341,7 +504,7 @@ button {
   border-radius: 5px;
   position: absolute;
   right: 0;
-  top: 50%;
+  top: 25%;
   margin-top: -236px;
   padding: 40px 35px;
 }
@@ -474,7 +637,7 @@ a.submit {
 .bottom .fll:nth-of-type(2) a {
   color: #666666;
 }
-.loginForm .titleUnit {
+.registerForm .titleUnit {
   width: 100%;
   height: 30px;
   margin-bottom: 40px;
@@ -516,7 +679,8 @@ a.submit {
   bottom: 0px;
 }
 .foot-p{
-    text-align: center
+    text-align: center;
+    margin-top: 0;
 }
 .foot-p a{
     color: #2a6496;
@@ -527,9 +691,9 @@ a.submit {
 /* 修复input 背景不协调 和光标变色 */
 /* Detail see https://github.com/PanJiaChen/vue-element-admin/pull/927 */
 
-$bg:#283443;
+$bg:#fff;
 $light_gray:#fff;
-$cursor: #fff;
+$cursor: #283443;
 
 @supports (-webkit-mask: none) and (not (cater-color: $cursor)) {
   .login-container .el-input input {
@@ -539,6 +703,14 @@ $cursor: #fff;
 
 /* reset element-ui css */
 .login-container {
+    .captcha{
+        display: inline-block;
+        width: 65%;
+        position: relative;
+        .el-input{
+            width: 80%;
+        }
+    }
   .el-input {
     display: inline-block;
     height: 47px;
@@ -550,7 +722,7 @@ $cursor: #fff;
       -webkit-appearance: none;
       border-radius: 0px;
       padding: 12px 5px 12px 15px;
-      color: $bg;
+      color: $cursor;
       height: 47px;
       caret-color: $cursor;
 
@@ -559,6 +731,7 @@ $cursor: #fff;
         -webkit-text-fill-color: $cursor !important;
       }
     }
+
   }
 
   .el-form-item {

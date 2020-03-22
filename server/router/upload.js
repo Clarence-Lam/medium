@@ -6,5 +6,6 @@ router.prefix('/api')
 
 router
   .post('/upload', uploadController.wordToHtml)
+  .post('/uploadRar', uploadController.uploadRar)
 
 module.exports = router

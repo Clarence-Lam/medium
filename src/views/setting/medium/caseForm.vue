@@ -1,6 +1,7 @@
 <template>
   <div class="app-container">
-    <h3>{{ textMap[this.$route.params.dialogStatus] }}</h3>
+    <h3 class="app-container-title">{{ textMap[this.$route.params.dialogStatus] }}</h3>
+    <hr class="app-container-hr">
     <el-form ref="caseForm" :model="caseForm" :rules="rules" label-width="150px" label-position="left" style="width: 400px; margin-left:50px;">
       <el-form-item label="产品名称：" prop="name">
         <el-input v-model="caseForm.name" />
@@ -12,10 +13,10 @@
         <el-input v-model="caseForm.platform" />
       </el-form-item>
       <el-form-item label="代理价格：" prop="agent_price">
-        <el-input v-model.number="caseForm.agent_price" />
+        <el-input v-model="caseForm.agent_price" oninput="value=value.replace(/[^\d.]/g,'')" />
       </el-form-item>
       <el-form-item label="普通用户价格：" prop="general_price">
-        <el-input v-model.number="caseForm.general_price" />
+        <el-input v-model="caseForm.general_price" oninput="value=value.replace(/[^\d.]/g,'')" />
       </el-form-item>
       <el-form-item label="百度权重：" prop="baidu">
         <el-input v-model.number="caseForm.baidu" />
@@ -96,11 +97,11 @@ export default {
         ],
         agent_price: [
           { required: true, message: '请输入代理价格', trigger: 'blur' },
-          { type: 'number', message: '请输入正确的金额', trigger: 'blur' }
+          { pattern: /^\d+(\.\d{0,2})?$/, message: '请输入正确的金额（保留两位小数）', trigger: 'blur' }
         ],
         general_price: [
           { required: true, message: '请输入普通用户价格', trigger: 'blur' },
-          { type: 'number', message: '请输入正确的金额', trigger: 'blur' }
+          { pattern: /^\d+(\.\d{0,2})?$/, message: '请输入正确的金额（保留两位小数）', trigger: 'blur' }
         ],
         baidu: [
           { required: true, message: '请输入百度权重', trigger: 'blur' },

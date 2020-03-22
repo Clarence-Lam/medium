@@ -1,5 +1,7 @@
 <template>
   <div class="app-container">
+    <h3 class="app-container-title">用户管理</h3>
+    <hr class="app-container-hr">
     <div class="filter-container">
       <!-- <el-input v-model="listQuery.title" placeholder="Title" style="width: 200px;" class="filter-item" @keyup.enter.native="handleFilter" />
       <el-select v-model="listQuery.importance" placeholder="Imp" clearable style="width: 90px" class="filter-item">
@@ -84,6 +86,7 @@
             <el-option label="技术" value="技术" />
             <el-option label="客服" value="客服" />
             <el-option label="管理员" value="管理员" />
+            <el-option label="财务" value="财务" />
           </el-select>
         </el-form-item>
       </el-form>

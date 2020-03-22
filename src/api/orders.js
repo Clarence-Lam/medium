@@ -63,12 +63,20 @@ export function submitOrder(data) {
   })
 }
 
+export function submitOrderRar(data) {
+  return request({
+    url: '/order/submitOrderRar',
+    method: 'post',
+    data
+  })
+}
+
 // 客户获取订单
-export function getMyOrder(query) {
+export function getMyOrder(data) {
   return request({
     url: '/order/getMyOrder',
-    method: 'get',
-    params: query
+    method: 'post',
+    data
   })
 }
 

@@ -74,6 +74,16 @@ export function validEmail(email) {
 }
 
 /**
+ *
+ * @param {string} str
+ * @returns {Boolean}
+ */
+export function validQQ(qq) {
+  const reg = /^\d{5,11}/
+  return reg.test(qq)
+}
+
+/**
  * @param {string} str
  * @returns {Boolean}
  */

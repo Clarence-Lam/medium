@@ -60,8 +60,13 @@ service.interceptors.response.use(
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
+          const role = localStorage.getItem('role')
           store.dispatch('user/resetToken').then(() => {
-            location.reload()
+            if (role === 'admin' || role === 'service' || role === 'technology') {
+              window.location.href = '/#/adminLogin'
+            } else {
+              location.reload()
+            }
           })
         })
       }

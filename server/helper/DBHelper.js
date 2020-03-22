@@ -72,3 +72,68 @@ exports.updateByParams = (table, values, conditions) => {
   const sql = `UPDATE ${table} SET ? WHERE STATUS='1' ${str}`
   return query(sql, values, conditions)
 }
+
+/* 支持in查询，like查询
+values：{a:1,b:2}
+inValuesObj:{a:[]}
+likeValues:{a:1,b:2}
+daterange:{timeName:[start,end]}
+*/
+exports.getListsInLike = (table, limit, values, inValuesObj, likeValues, daterange) => {
+  let str = ''
+  for (const item in values) {
+    str += ` AND ${item} = '${values[item]}'`
+  }
+  for (const item in likeValues) {
+    if (likeValues[item]) {
+      str += ` AND ${item} like '%${likeValues[item]}%'`
+    }
+  }
+  for (const arr in inValuesObj) {
+    const strArr = []
+    for (const item of inValuesObj[arr]) {
+      // str += ` AND ${arr} IN ('${value[item]}')`
+      strArr.push(`'${item}'`)
+    }
+    if (strArr.length > 0) {
+      str += ` AND ${arr} IN (${strArr.join(',')})`
+    }
+  }
+  for (const item in daterange) {
+    if (daterange[item] && daterange[item][0] && daterange[item][1]) {
+      str += `AND ${item} BETWEEN '${daterange[item][0]} 00:00:00' AND '${daterange[item][1]} 23:59:59'`
+    }
+  }
+  const sql = `SELECT*FROM ${table} WHERE STATUS='1' ${values || inValuesObj || likeValues ? str : ''} ORDER BY created_time DESC limit ${limit[0]}, ${limit[1]}`
+  return query(sql)
+}
+
+exports.getListsInLikeTotal = (table, values, inValuesObj, likeValues, daterange) => {
+  let str = ''
+  for (const item in values) {
+    str += ` AND ${item} = '${values[item]}'`
+  }
+  for (const item in likeValues) {
+    if (likeValues[item]) {
+      str += ` AND ${item} like '%${likeValues[item]}%'`
+    }
+  }
+  for (const arr in inValuesObj) {
+    const strArr = []
+    for (const item of inValuesObj[arr]) {
+      // str += ` AND ${arr} IN ('${value[item]}')`
+      strArr.push(`'${item}'`)
+    }
+    if (strArr.length > 0) {
+      str += ` AND ${arr} IN (${strArr.join(',')})`
+    }
+  }
+  for (const item in daterange) {
+    if (daterange[item] && daterange[item][0] && daterange[item][1]) {
+      str += `AND ${item} BETWEEN '${daterange[item][0]} 00:00:00' AND '${daterange[item][1]} 23:59:59'`
+    }
+  }
+  const sql = `SELECT COUNT(*) AS count FROM ${table} WHERE STATUS='1' ${values || inValuesObj || likeValues ? str : ''}`
+  format(sql)
+  return query(sql)
+}

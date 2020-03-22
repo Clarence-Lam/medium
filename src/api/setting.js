@@ -188,6 +188,20 @@ export function addPublic(data) {
   })
 }
 
+export function getTips() {
+  return request({
+    url: '/setting/getTips',
+    method: 'get'
+  })
+}
+export function addTips(data) {
+  return request({
+    url: '/setting/addTips',
+    method: 'post',
+    data
+  })
+}
+
 export function getCustomer(query) {
   return request({
     url: '/setting/getCustomer',
@@ -201,5 +215,65 @@ export function updateCust(data) {
     url: '/setting/updateCust',
     method: 'post',
     data
+  })
+}
+
+export function updatePass(data) {
+  return request({
+    url: '/setting/updatePass',
+    method: 'post',
+    data
+  })
+}
+
+export function getDot(query) {
+  return request({
+    url: '/setting/getDot',
+    method: 'get',
+    params: query
+  })
+}
+
+export function changeFirstTime(data) {
+  return request({
+    url: '/setting/changeFirstTime',
+    method: 'post',
+    data
+  })
+}
+
+// 广告管理列表
+export function getAllAd(query) {
+  return request({
+    url: '/setting/getAllAd',
+    method: 'get',
+    params: query
+  })
+}
+
+// 增加广告
+export function addAd(data) {
+  return request({
+    url: '/setting/addAd',
+    method: 'post',
+    data
+  })
+}
+
+// 更改公告状态
+export function changeAd(data) {
+  return request({
+    url: '/setting/changeAd',
+    method: 'post',
+    data
+  })
+}
+
+// 首页获取广告
+export function getAdList(query) {
+  return request({
+    url: '/setting/getAdList',
+    method: 'get',
+    params: query
   })
 }

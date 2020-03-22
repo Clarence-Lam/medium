@@ -1,4 +1,4 @@
-import { login, logout, getInfo, adminLogin } from '@/api/user'
+import { login, logout, getInfo, adminLogin, phoneLogin } from '@/api/user'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import router, { resetRouter } from '@/router'
 
@@ -9,7 +9,9 @@ const state = {
   introduction: '',
   roles: [],
   level: '',
-  lastTime: ''
+  lastTime: '',
+  firstTime: '',
+  qqUrl: 'tencent://message/?uin=345200771&Site=Sambow&Menu=yes'// 打开qq对话
 }
 
 const mutations = {
@@ -33,6 +35,9 @@ const mutations = {
   },
   SET_LASTTIME: (state, lastTime) => {
     state.lastTime = lastTime
+  },
+  SET_FIRSTTIME: (state, firstTime) => {
+    state.firstTime = firstTime
   }
 }
 
@@ -72,6 +77,23 @@ const actions = {
       })
     })
   },
+  phoneLogin({ commit }, userInfo) {
+    const { phone, smsCaptcha } = userInfo
+    return new Promise((resolve, reject) => {
+      phoneLogin({ phone: phone.trim(), smsCaptcha: smsCaptcha }).then(response => {
+        if (response.status === 200) {
+          const data = response
+          commit('SET_TOKEN', data.token)
+          setToken(data.token)
+          resolve(response)
+        } else {
+          reject(response.statusText)
+        }
+      }).catch(error => {
+        reject(error)
+      })
+    })
+  },
 
   // get user info
   getInfo({ commit, state }) {
@@ -83,7 +105,7 @@ const actions = {
           reject('验证登录失败，请重新登录.')
         }
 
-        const { roles, name, avatar, introduction, level, lastTime } = data
+        const { roles, name, avatar, introduction, level, lastTime, firstTime } = data
 
         // roles must be a non-empty array
         if (!roles || roles.length <= 0) {
@@ -96,6 +118,8 @@ const actions = {
         commit('SET_INTRODUCTION', introduction)
         commit('SET_LEVEL', level)
         commit('SET_LASTTIME', lastTime)
+        commit('SET_FIRSTTIME', firstTime)
+        localStorage.setItem('role', roles[0])
         resolve(data)
       }).catch(error => {
         reject(error)

@@ -10,6 +10,7 @@ const path = require('path')
 const logger = require('koa-logger')
 const Koa_Session = require('koa-session')
 const requireDirectory = require('require-directory')
+const moment = require('moment')
 
 const cron = require('./cron/index.js')
 const logsUtil = require('./helper/logs.js')
@@ -21,12 +22,17 @@ const port = process.env.PORT || 3000
 // require('./router/index')(router)
 
 // 定义允许直接访问的url
-const allowpage = ['/static/css', '/static/js', '/static/fonts', '/static/img/', '/', '/css/index.css', '/js/index.js', '/login', '/adminLogin', '/api/login', '/api/adminLogin', '/api/register', '/assets/0d93a56513016e7ce298a268f2602fa5.jpg']
+const allowpage = ['/static/css', '/static/js', '/static/fonts', '/static/img/', '/', '/css/index.css',
+  '/js/index.js', '/login', '/adminLogin', '/api/login', '/api/adminLogin', '/api/phoneLogin', '/api/register',
+  '/api/resetting', '/api/getSvgCaptcha', '/api/getSmsCaptcha', '/api/alipay/gateway']
+
+// 通过官网的接口
+const indexAllow = ['/api/setting/getTypesNameList', '/api/setting/getTypesContent', '/api/order/getCommitTable']
 
 const session_signed_key = ['medium'] // 这个是配合signed属性的签名key
 const session_config = {
   key: 'USER_SID', /**  cookie的key。 (默认是 koa:sess) */
-  maxAge: 60 * 60 * 1000 * 0.5, /**  session 过期时间，以毫秒ms为单位计算 。*/
+  maxAge: 60 * 60 * 1000 * 2, /**  session 过期时间，以毫秒ms为单位计算 。*/
   autoCommit: true, /** 自动提交到响应头。(默认是 true) */
   overwrite: true, /** 是否允许重写 。(默认是 true) */
   httpOnly: true, /** 是否设置HttpOnly，如果在Cookie中设置了"HttpOnly"属性，那么通过程序(JS脚本、Applet等)将无法读取到Cookie信息，这样能有效的防止XSS攻击。  (默认 true) */
@@ -39,15 +45,23 @@ app.keys = session_signed_key
 
 // 拦截
 function localFilter(ctx, next) {
+  console.log(moment().format('YYYY-MM-DD HH:mm:ss'))
   const url = ctx.originalUrl
+  console.log(ctx.url)
   if (allowpage.indexOf(url) > -1) {
-    console.log('当前地址可直接访问')
+    // console.log('当前地址可直接访问')
     return next()
-  } else if (url.search(allowpage[0]) > -1 || url.search(allowpage[1]) > -1 || url.search(allowpage[2]) > -1) {
+  } else if (url.search(allowpage[0]) > -1 || url.search(allowpage[1]) > -1 || url.search(allowpage[2]) > -1 || url.search(allowpage[3]) > -1) {
     return next()
   } else if (ctx.session && ctx.session.isLogin && ctx.session.userName) {
-    console.log('正常访问')
+    // console.log('正常访问')
     return next()
+  } else {
+    for (const i of indexAllow) {
+      if (url.search(i) > -1) {
+        return next()
+      }
+    }
   }
   ctx.body = {
     code: 403,
@@ -103,7 +117,7 @@ requireDirectory(module, './router', {
 console.log(process.cwd())
 app
   .use(router.allowedMethods())
-  .use(serve(path.join(process.cwd(), 'downloads')))
+  .use(serve(path.join(process.cwd(), '/upload')))
   .use(serve(path.join(process.cwd(), 'dist')))
   .listen(port, () => {
     console.log('The server is running at:')

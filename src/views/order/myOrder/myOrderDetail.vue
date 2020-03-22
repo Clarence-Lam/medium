@@ -2,7 +2,7 @@
   <div v-loading.fullscreen.lock="fullscreenLoading">
     <el-row :gutter="20">
       <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
-        <el-card class="box-card">
+        <el-card class="box-card order-content">
           <div slot="header" class="clearfix">
             <span>订单内容</span>
           </div>
@@ -12,7 +12,12 @@
       <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
         <el-card class="box-card">
           <div slot="header" class="clearfix">
-            <span>订单信息</span>
+            <span>
+              订单信息
+              <span style="float: right;">
+                <el-button type="primary" icon="el-icon-arrow-left" size="mini" @click="previousPage">上一页</el-button>
+              </span>
+            </span>
           </div>
           <div class="order-detail">
             <div>
@@ -35,10 +40,10 @@
               <p class="detail-title">客户名称：</p>
               <span>{{ order.customer_name }}</span>
             </div>
-            <div>
+            <!-- <div>
               <p class="detail-title">客户等级：</p>
               <span>{{ order.customer_level }}</span>
-            </div>
+            </div> -->
             <div>
               <p class="detail-title">希望多久完成：</p>
               <span>{{ order.finish_time }}天</span>
@@ -62,6 +67,7 @@
             <div>
               <p class="detail-title">数量：</p>
               <span>{{ order.num }}</span>
+              <span v-if="order.sign === 'copy_write'">（其中{{ numLabel }}）</span>
             </div>
             <div>
               <p class="detail-title">费用：</p>
@@ -121,7 +127,7 @@
           <div slot="header" class="clearfix">
             <span>操作</span>
           </div>
-          <div class="blog-content">
+          <div>
             <div style="margin:20px">
               <el-button type="primary" @click="toAddUrl()">申请补单</el-button>
             </div>
@@ -139,6 +145,9 @@ const tableLable = {
     {
       title: '平台',
       key: 'platform'
+    }, {
+      title: '数量',
+      key: 'num'
     }, {
       title: '代理价格',
       key: 'agent_price'
@@ -161,6 +170,9 @@ const tableLable = {
       title: '平台',
       key: 'platform'
     }, {
+      title: '数量',
+      key: 'num'
+    }, {
       title: '代理价格',
       key: 'agent_price'
     }, {
@@ -172,6 +184,33 @@ const tableLable = {
     }, {
       title: '参考粉丝数',
       key: 'fens_num'
+    }, {
+      title: '备注',
+      key: 'mark'
+    }
+  ],
+  question: [
+    {
+      title: '平台',
+      key: 'platform'
+    }, {
+      title: '数量',
+      key: 'num'
+    }, {
+      title: '一问几答',
+      key: 'yiwenjida'
+    }, {
+      title: '代理价格',
+      key: 'agent_price'
+    }, {
+      title: '普通用户价格',
+      key: 'general_price'
+    }, {
+      title: '百度权重',
+      key: 'baidu'
+    }, {
+      title: '起始下单量',
+      key: 'start_num'
     }, {
       title: '备注',
       key: 'mark'
@@ -188,7 +227,8 @@ export default {
       url: '',
       supplyUrl: '',
       urlData: {},
-      fullscreenLoading: false
+      fullscreenLoading: false,
+      numLabel: ''
     }
   },
   created() {
@@ -204,7 +244,8 @@ export default {
         finish: '已完成',
         uphold: '维护中',
         reject: '已拒绝',
-        complaining: '投诉中'
+        complaining: '投诉中',
+        discard: '已废弃'
       }
       return state[value]
     },
@@ -235,6 +276,11 @@ export default {
           for (let i = 0; i < num; i++) {
             this.$set(this.urlData, 'url' + i, '')
           }
+          let str = ''
+          for (const item of this.tableData) {
+            str += `${item.name}数量：${item.num},`
+          }
+          this.numLabel = (str.substring(str.length - 1) === ',') ? str.substring(0, str.length - 1) : str
         })
       } else {
         this.$router.push(
@@ -254,8 +300,12 @@ export default {
           }
         }
       )
-    }, getImgUrl(i) {
+    },
+    getImgUrl(i) {
       return require('@/assets/images/baidu' + i + '.png')
+    },
+    previousPage() {
+      this.$router.go(-1)
     }
   }
 }
@@ -275,5 +325,9 @@ export default {
 <style>
 .blog-content img{
     max-width: 100%
+}
+.order-content .el-card__body{
+    max-height: 80vh;
+    overflow: auto;
 }
 </style>

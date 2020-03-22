@@ -1,5 +1,9 @@
 <template>
   <div>
+    <div>
+      <el-input v-model="fuzzySearch.name" placeholder="产品名称" style="width:20%" />
+      <el-button type="primary" @click="getList()">查询</el-button>
+    </div>
     <el-table
       :key="tableKey"
       ref="multipleTable"
@@ -8,10 +12,11 @@
       border
       fit
       highlight-current-row
-      style="width: 100%;"
+      style="width: 100%;margin-top:20px"
+      :row-key="getRowKeys"
       @selection-change="handleSelectionChange"
     >
-      <el-table-column type="selection" width="55" />
+      <el-table-column type="selection" :reserve-selection="true" width="50" prop="id" />
       <el-table-column v-if="false" label="ID" prop="id" sortable="custom" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
@@ -149,6 +154,12 @@ export default {
       default() {
         return {}
       }
+    },
+    isSelection: {
+      type: Boolean,
+      default() {
+        return false
+      }
     }
   },
   data() {
@@ -163,7 +174,13 @@ export default {
         limit: 10
       },
       multipleSelection: [],
-      currentRow: null
+      currentRow: null,
+      fuzzySearch: {
+        name: ''
+      },
+      getRowKeys(row) {
+        return row.id
+      }
     }
   },
   //   computed: {
@@ -178,6 +195,7 @@ export default {
       handler(newV, oldV) {
         // do something, 可使用this
         // console.log(newV, oldV)
+        this.listQuery.page = 1
         this.getList()
       },
       deep: true
@@ -195,7 +213,7 @@ export default {
   },
   methods: {
     getList() {
-      getCommitTable({ dept: this.dept, search: this.caseForm, page: this.listQuery.page }).then(res => {
+      getCommitTable({ dept: this.dept, search: this.caseForm, page: this.listQuery.page, fuzzySearch: this.fuzzySearch }).then(res => {
         const data = []
         for (const item of res.data) {
           item['num'] = item.start_num
@@ -203,6 +221,11 @@ export default {
         }
         this.tableData = data
         this.total = res.num
+        if (this.isSelection && this.dept === this.$store.state.dept) {
+          this.addSelection(this.$store.state.multipleSelection)
+        } else if (this.$store.state.order.pay === this.dept) {
+          this.addSelection(this.$store.state.order.multipleSelection)
+        }
       })
     },
     handleSelectionChange(val) {
@@ -228,6 +251,7 @@ export default {
         })
         row.num = row.start_num
       }
+      row.num = Math.floor(row.num)
     },
     getImgUrl(i) {
       return require('@/assets/images/baidu' + i + '.png')
@@ -239,6 +263,16 @@ export default {
       toggleCollection({ case_id: row.id, collection: !row.is_collection }).then(res => {
         this.getList()
       })
+    },
+    addSelection(rows) {
+      if (rows) {
+        this.$refs.multipleTable.clearSelection()
+        rows.forEach(row => {
+          this.$refs.multipleTable.toggleRowSelection(row)
+        })
+      } else {
+        this.$refs.multipleTable.clearSelection()
+      }
     }
   }
 
@@ -253,6 +287,8 @@ input[type="number"]{
   -moz-appearance: textfield;
 }
 .baidu{
-    width:45%;
+    width:60%;
+    max-width: 80px;
+    height: 22px;
 }
 </style>

@@ -8,15 +8,15 @@
         </h2>
 
         <div class="line" />
-        <div class="call_tel">
+        <!-- <div class="call_tel">
           <div class="text">注册咨询热线</div>
           <div class="tel">0754-8888-8888</div>
-        </div>
-        <ul>
+        </div> -->
+        <!-- <ul>
           <li><a href="/index.php/index/index/index.html">返回首页</a></li>
           <li><a href="/index.php/index/index/about.html?type=1">关于我们</a></li>
           <li><a href="/index.php/index/index/about.html?type=3">联系我们</a></li>
-        </ul>
+        </ul> -->
       </div>
       <div class="login-container ">
         <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form loginForm" auto-complete="on" label-position="left">
@@ -136,7 +136,6 @@ export default {
         if (valid) {
           this.loading = true
           this.$store.dispatch('user/adminLogin', this.loginForm).then((res) => {
-            console.log(res)
             if (res.role === 'customer') {
               this.$router.push({ path: '/home/home' })
             } else {
@@ -231,7 +230,7 @@ button {
 .login_bg {
   width: 100%;
   height: 100%;
-  background: #524e4f url('../../assets/images/login_bg.jpg');
+  background: #524e4f url('../../assets/images/login_bg.png');
   background-size: cover;
 }
 .main {
@@ -520,9 +519,9 @@ a.submit {
 /* 修复input 背景不协调 和光标变色 */
 /* Detail see https://github.com/PanJiaChen/vue-element-admin/pull/927 */
 
-$bg:#283443;
-$light_gray:#fff;
-$cursor: #fff;
+$bg:#fff;
+$light_gray:#283443;
+$cursor: #283443;
 
 @supports (-webkit-mask: none) and (not (cater-color: $cursor)) {
   .login-container .el-input input {
@@ -543,7 +542,7 @@ $cursor: #fff;
       -webkit-appearance: none;
       border-radius: 0px;
       padding: 12px 5px 12px 15px;
-      color: $bg;
+      color: $cursor;
       height: 47px;
       caret-color: $cursor;
 

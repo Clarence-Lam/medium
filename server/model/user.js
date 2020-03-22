@@ -42,6 +42,7 @@ exports.searchCusts = (params, values, limit) => {
     }
   }
   const sql = `SELECT*FROM customer WHERE 1=1 ${params || values ? str : ''} ORDER BY created_time DESC limit ${limit[0]}, ${limit[1]}`
+  console.log(sql)
   return query(sql)
 }
 
@@ -58,3 +59,9 @@ exports.searchCustsTotal = (params, values) => {
   const sql = `SELECT COUNT(*) AS count FROM customer WHERE 1=1 ${params || values ? str : ''} ORDER BY created_time DESC `
   return query(sql)
 }
+
+exports.getRecommender = (id) => {
+  const sql = `SELECT * FROM user where id like '%${id}%' `
+  return query(sql)
+}
+
